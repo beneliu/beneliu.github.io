@@ -1,0 +1,338 @@
+<!doctype html><html itemscope itemtype=http://schema.org/WebPage lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=2"><meta name=robots content="noodp"><title>Fixit-主题美化 - 字节飞鸿</title><meta name=author content="beneliu">
+<meta name=description content=" 内容简介 记录FixIt主题美化的操作步骤。 一、自定义css 1.1 自定义字体 在站点项目根目录下面，在/assets/css/_custom.scss中添加以下代码即可自定义字体。推荐在中文网字计划中挑选自己喜欢的字体。
+"><meta name=keywords content='建站笔记'><meta itemprop=name content="Fixit-主题美化"><meta itemprop=description content="内容简介 记录FixIt主题美化的操作步骤。 一、自定义css 1.1 自定义字体 在站点项目根目录下面，在/assets/css/_custom.scss中添加以下代码即可自定义字体。推荐在中文网字计划中挑选自己喜欢的字体。"><meta itemprop=datePublished content="2025-04-06T18:49:20+08:00"><meta itemprop=dateModified content="2025-04-06T18:49:20+08:00"><meta itemprop=wordCount content="704"><meta itemprop=keywords content="建站笔记"><meta property="og:url" content="https://beneliu.github.io/posts/hugo-fixit/a9f08a3/"><meta property="og:site_name" content="字节飞鸿"><meta property="og:title" content="Fixit-主题美化"><meta property="og:description" content="内容简介 记录FixIt主题美化的操作步骤。 一、自定义css 1.1 自定义字体 在站点项目根目录下面，在/assets/css/_custom.scss中添加以下代码即可自定义字体。推荐在中文网字计划中挑选自己喜欢的字体。"><meta property="og:locale" content="zh_cn"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2025-04-06T18:49:20+08:00"><meta property="article:modified_time" content="2025-04-06T18:49:20+08:00"><meta property="article:tag" content="建站笔记"><meta name=twitter:card content="summary"><meta name=twitter:title content="Fixit-主题美化"><meta name=twitter:description content="内容简介 记录FixIt主题美化的操作步骤。 一、自定义css 1.1 自定义字体 在站点项目根目录下面，在/assets/css/_custom.scss中添加以下代码即可自定义字体。推荐在中文网字计划中挑选自己喜欢的字体。"><meta name=application-name content="FixIt"><meta name=apple-mobile-web-app-title content="FixIt"><meta name=theme-color data-light=#f8f8f8 data-dark=#252627 content="#f8f8f8"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=canonical type=text/html href=https://beneliu.github.io/posts/hugo-fixit/a9f08a3/ title="Fixit-主题美化 - 字节飞鸿"><link rel=prev type=text/html href=https://beneliu.github.io/posts/hugo-fixit/738f0f6/ title=Hugo学习><link rel=next type=text/html href=https://beneliu.github.io/friends/ title=友链><link rel=alternate type=text/markdown href=https://beneliu.github.io/posts/hugo-fixit/a9f08a3/index.md title="Fixit-主题美化 - 字节飞鸿"><link rel=stylesheet href=/css/style.min.css><link rel=preload href=/lib/fontawesome-free/all.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=/lib/fontawesome-free/all.min.css></noscript><link rel=preload href=/lib/animate/animate.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=/lib/animate/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"Fixit-主题美化","inLanguage":"zh-cn","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/beneliu.github.io\/posts\/hugo-fixit\/a9f08a3\/"},"genre":"posts","keywords":"建站笔记","wordcount":704,"url":"https:\/\/beneliu.github.io\/posts\/hugo-fixit\/a9f08a3\/","datePublished":"2025-04-06T18:49:20+08:00","dateModified":"2025-04-06T18:49:20+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"beneliu"},"description":""}</script><script src=/js/head/color-scheme.min.js></script></head><body data-header-desktop=sticky data-header-mobile=auto><div class=wrapper data-page-style=normal><header class="desktop animate__faster" id=header-desktop><div class=header-wrapper data-github-corner=left><div class=header-title><a href=/ title=字节飞鸿><img class=logo src=/images/avatar.png alt=字节飞鸿 height=32 width=32><span class=header-title-text>字节飞鸿</span></a><span class=header-subtitle></span></div><nav><ul class=menu><li class=menu-item><a class=menu-link href=/><i class="fa-solid fa-home fa-fw fa-sm" aria-hidden=true></i> 首页</a></li><li class=menu-item><a class=menu-link href=/posts/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 文章</a></li><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-th-list fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li><li class=menu-item><a class=menu-link href=/friends><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/websites><i class="fa-solid fa-globe fa-fw fa-sm" aria-hidden=true></i> 站点</a></li><li class="menu-item has-children"><a class=menu-link href=javascript:void(0);><i class="fa-solid fa-heart-pulse fa-fw fa-sm" aria-hidden=true></i> 趣味</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden=true></i><ul class=sub-menu><li class=menu-item><a class=menu-link href=https://mikutap.nikunokoya.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-music fa-fw fa-sm" aria-hidden=true></i> Mikutap打碟</a></li><li class=menu-item><a class=menu-link href=https://www.skylinewebcams.com rel="noopener noreferrer" target=_blank><i class="fa-solid fa-video fa-fw fa-sm" aria-hidden=true></i> 全球实况</a></li><li class=menu-item><a class=menu-link href=https://newsnow.busiyi.world rel="noopener noreferrer" target=_blank><i class="fa-solid fa-newspaper fa-fw fa-sm" aria-hidden=true></i> 实时热点新闻</a></li><li class=menu-item><a class=menu-link href=https://dapanyuntu.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-chart-line fa-fw fa-sm" aria-hidden=true></i> 大盘实况</a></li></ul></li><li class="menu-item delimiter"></li><li class="menu-item search" id=search-desktop><input type=text placeholder=搜索文章标题或内容…… id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></li><li class="menu-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></li></ul></nav></div></header><header class="mobile animate__faster" id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=字节飞鸿><img class=logo src=/images/avatar.png alt=字节飞鸿 height=26 width=26><span class=header-title-text>字节飞鸿</span></a><span class=header-subtitle></span></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><nav><ul class=menu id=menu-mobile><li class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章标题或内容…… id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>取消</a></li><li class=menu-item><a class=menu-link href=/><i class="fa-solid fa-home fa-fw fa-sm" aria-hidden=true></i> 首页</a></li><li class=menu-item><a class=menu-link href=/posts/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 文章</a></li><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-th-list fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li><li class=menu-item><a class=menu-link href=/friends><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/websites><i class="fa-solid fa-globe fa-fw fa-sm" aria-hidden=true></i> 站点</a></li><li class=menu-item><span class=nested-item><a class=menu-link href=javascript:void(0);><i class="fa-solid fa-heart-pulse fa-fw fa-sm" aria-hidden=true></i> 趣味</a>
+<i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden=true></i></span><ul class=sub-menu><li class=menu-item><a class=menu-link href=https://mikutap.nikunokoya.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-music fa-fw fa-sm" aria-hidden=true></i> Mikutap打碟</a></li><li class=menu-item><a class=menu-link href=https://www.skylinewebcams.com rel="noopener noreferrer" target=_blank><i class="fa-solid fa-video fa-fw fa-sm" aria-hidden=true></i> 全球实况</a></li><li class=menu-item><a class=menu-link href=https://newsnow.busiyi.world rel="noopener noreferrer" target=_blank><i class="fa-solid fa-newspaper fa-fw fa-sm" aria-hidden=true></i> 实时热点新闻</a></li><li class=menu-item><a class=menu-link href=https://dapanyuntu.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-chart-line fa-fw fa-sm" aria-hidden=true></i> 大盘实况</a></li></ul></li><li class="menu-item menu-system"><span class="menu-system-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></span></li></ul></nav></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=container><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label=合集></aside><article class="page single"><div class=header><h1 class="single-title animate__animated animate__flipInX"><span>Fixit-主题美化</span></h1></div><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://github.com/beneliu title=作者 target=_blank rel="external nofollow noopener noreferrer author" class=author><img class=avatar src=/images/avatar.png alt=beneliu height=16 width=16>&nbsp;beneliu</a></span><span class=post-included-in>&nbsp;收录于 <a href=/categories/%E5%BB%BA%E7%AB%99%E7%AC%94%E8%AE%B0/ class=post-category title="分类 - 建站笔记"><i class="fa-regular fa-folder fa-fw" aria-hidden=true></i> 建站笔记</a></span></div><div class=post-meta-line><span title="发布于 2025-04-06 18:49:20"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden=true></i><time datetime=2025-04-06>2025-04-06</time></span>&nbsp;<span title="704 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden=true></i>约 800 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden=true></i>预计阅读 4 分钟</span>&nbsp;<span id=busuanzi_container_page_pv class="busuanzi_visitors comment-visitors" data-flag-title=Fixit-主题美化><i class="fa-regular fa-eye fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_page_pv>-</span>&nbsp;次阅读
+</span>&nbsp;</div></div><div class="details toc" id=toc-static data-kept=false><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fa-solid fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#一自定义css>一、自定义css</a><ul><li><a href=#11-自定义字体>1.1 自定义字体</a></li><li><a href=#12-自定义文章网格背景>1.2 自定义文章网格背景</a></li></ul></li><li><a href=#二自定义模板>二、自定义模板</a><ul><li><a href=#21-自定义文章页面侧边目录模板>2.1 自定义文章页面侧边目录模板</a></li></ul></li><li><a href=#三自定义js>三、自定义js</a><ul><li><a href=#31-设置网站title动态>3.1 设置网站title动态</a></li></ul></li><li><a href=#四设置github提交记录贪吃蛇动画>四、设置Github提交记录贪吃蛇动画</a><ul><li><a href=#41-贪吃蛇动画生成>4.1 贪吃蛇动画生成</a></li><li><a href=#42-自定义首页头像css>4.2 自定义首页头像css</a></li></ul></li><li><a href=#五添加友链>五、添加友链</a></li></ul></nav></div></div><div class=content id=content><div class="details admonition info open"><div class="details-summary admonition-title"><i class="icon fa-fw fa-solid fa-circle-info" aria-hidden=true></i>内容简介<i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden=true></i></div><div class=details-content><div class=admonition-content>记录FixIt主题美化的操作步骤。</div></div></div><h2 id=一自定义css class=heading-element><span>一、自定义css</span>
+<a href=#%e4%b8%80%e8%87%aa%e5%ae%9a%e4%b9%89css class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><h3 id=11-自定义字体 class=heading-element><span>1.1 自定义字体</span>
+<a href=#11-%e8%87%aa%e5%ae%9a%e4%b9%89%e5%ad%97%e4%bd%93 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>在站点项目根目录下面，在<code>/assets/css/_custom.scss</code>中添加以下代码即可自定义字体。推荐在<a href=https://chinese-font.netlify.app/zh-cn/cdn/ target=_blank rel="external nofollow noopener noreferrer">中文网字计划</a>中挑选自己喜欢的字体。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-scss data-lang=scss><span class=line><span class=cl><span class=c1>// 引入字体 https://chinese-font.netlify.app/zh-cn/cdn/
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=k>@import</span> <span class=sx>url(&#39;https://chinese-fonts-cdn.deno.dev/packages/lxgwwenkai/dist/LXGWWenKai-Light/result.css&#39;)</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=c1>// 自定义字体
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nt>html</span><span class=o>,</span><span class=nt>body</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>   <span class=na>font-family</span><span class=o>:</span> <span class=s2>&#34;LXGW WenKai Light&#34;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>   <span class=na>font-weight</span><span class=o>:</span> <span class=ni>normal</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>   <span class=na>font-size</span><span class=o>:</span> <span class=mi>1</span><span class=kt>rem</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><h3 id=12-自定义文章网格背景 class=heading-element><span>1.2 自定义文章网格背景</span>
+<a href=#12-%e8%87%aa%e5%ae%9a%e4%b9%89%e6%96%87%e7%ab%a0%e7%bd%91%e6%a0%bc%e8%83%8c%e6%99%af class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>在<code>/assets/css/_custom.scss</code>文件中添加如下代码：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-scss data-lang=scss><span class=line><span class=cl><span class=cm>/** 添加网格背景 */</span>
+</span></span><span class=line><span class=cl><span class=nc>.single</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nc>.single-subtitle</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=na>color</span><span class=o>:</span> <span class=mh>#57606a</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=nc>.content</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=na>background-image</span><span class=o>:</span> <span class=nf>linear-gradient</span><span class=p>(</span><span class=mi>90</span><span class=kt>deg</span><span class=o>,</span> <span class=nf>rgba</span><span class=p>(</span><span class=mi>60</span><span class=o>,</span> <span class=mi>10</span><span class=o>,</span> <span class=mi>30</span><span class=o>,</span> <span class=mf>.04</span><span class=p>)</span> <span class=mi>3</span><span class=kt>%</span><span class=o>,</span> <span class=ni>transparent</span> <span class=mi>0</span><span class=p>)</span><span class=o>,</span> <span class=nf>linear-gradient</span><span class=p>(</span><span class=mi>1</span><span class=kt>turn</span><span class=o>,</span> <span class=nf>rgba</span><span class=p>(</span><span class=mi>60</span><span class=o>,</span> <span class=mi>10</span><span class=o>,</span> <span class=mi>30</span><span class=o>,</span> <span class=mf>.04</span><span class=p>)</span> <span class=mi>3</span><span class=kt>%</span><span class=o>,</span> <span class=ni>transparent</span> <span class=mi>0</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=na>background-size</span><span class=o>:</span> <span class=mi>20</span><span class=kt>px</span> <span class=mi>20</span><span class=kt>px</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=na>background-position</span><span class=o>:</span> <span class=ni>center</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  
+</span></span><span class=line><span class=cl>    <span class=o>[</span><span class=nt>data-theme</span><span class=o>=</span><span class=s1>&#39;dark&#39;</span><span class=o>]</span> <span class=k>&amp;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=na>background-image</span><span class=o>:</span> <span class=nf>linear-gradient</span><span class=p>(</span><span class=mi>90</span><span class=kt>deg</span><span class=o>,</span> <span class=nf>rgba</span><span class=p>(</span><span class=mi>195</span><span class=o>,</span> <span class=mi>245</span><span class=o>,</span> <span class=mi>215</span><span class=o>,</span> <span class=mf>.04</span><span class=p>)</span> <span class=mi>3</span><span class=kt>%</span><span class=o>,</span> <span class=ni>transparent</span> <span class=mi>0</span><span class=p>)</span><span class=o>,</span> <span class=nf>linear-gradient</span><span class=p>(</span><span class=mi>1</span><span class=kt>turn</span><span class=o>,</span> <span class=nf>rgba</span><span class=p>(</span><span class=mi>195</span><span class=o>,</span> <span class=mi>245</span><span class=o>,</span> <span class=mi>215</span><span class=o>,</span> <span class=mf>.04</span><span class=p>)</span> <span class=mi>3</span><span class=kt>%</span><span class=o>,</span> <span class=ni>transparent</span> <span class=mi>0</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><h2 id=二自定义模板 class=heading-element><span>二、自定义模板</span>
+<a href=#%e4%ba%8c%e8%87%aa%e5%ae%9a%e4%b9%89%e6%a8%a1%e6%9d%bf class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><h3 id=21-自定义文章页面侧边目录模板 class=heading-element><span>2.1 自定义文章页面侧边目录模板</span>
+<a href=#21-%e8%87%aa%e5%ae%9a%e4%b9%89%e6%96%87%e7%ab%a0%e9%a1%b5%e9%9d%a2%e4%be%a7%e8%be%b9%e7%9b%ae%e5%bd%95%e6%a8%a1%e6%9d%bf class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>在站点项目根目录下面，<code>/layouts/partials/</code>文件夹下创建<code>custom</code>文件夹，可以用来存储自定义模板。Hugo有自带的toc模板, 可以通过<code>{{.Content}}</code>引入这个模板, 具体可以看<a href=https://hugo.opendocs.io/zh-cn/methods/page/tableofcontents/ target=_blank rel="external nofollow noopener noreferrer">官方使用教程</a>。在使用过程发现有多级标题时，侧边目录标号顺序不能实现<code>1.1</code>、<code>1.1.1</code>的形式。索性想自己定义一个toc模板使用，需要<code>1.1</code>、<code>1.1.1</code>形式的侧边目录编号时，自己在md文档中添加即可。<code>/layouts/partials/custom/toc.html</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-html data-lang=html><span class=line><span class=cl>{{- /* 自定义toc目录 */ -}}
+</span></span><span class=line><span class=cl>{{ $headers := findRE &#34;<span class=p>&lt;</span><span class=nt>h</span><span class=err>[</span><span class=na>1-4</span><span class=err>].*?</span><span class=p>&gt;</span>(.|\n])+?<span class=err>&lt;</span>/h[1-4]&gt;&#34; .Content }}
+</span></span><span class=line><span class=cl><span class=c>&lt;!-- at least one header to link to --&gt;</span>
+</span></span><span class=line><span class=cl>{{ if ge (len $headers) 1 }}
+</span></span><span class=line><span class=cl>{{ $h1_n := len (findRE &#34;(.|\n])+?&#34; .Content) }}
+</span></span><span class=line><span class=cl>{{ $re := (cond (eq $h1_n 0) &#34;<span class=p>&lt;</span><span class=nt>h</span><span class=err>[</span><span class=na>2-4</span><span class=err>]&#34;</span> <span class=err>&#34;&lt;</span><span class=na>h</span><span class=err>[</span><span class=na>1-4</span><span class=err>]&#34;)</span> <span class=err>}}</span>
+</span></span><span class=line><span class=cl><span class=err>{{</span> <span class=err>$</span><span class=na>renum</span> <span class=na>:</span><span class=o>=</span> <span class=s>(cond</span> <span class=err>(</span><span class=na>eq</span> <span class=err>$</span><span class=na>h1_n</span> <span class=na>0</span><span class=err>)</span> <span class=err>&#34;[</span><span class=na>2-4</span><span class=err>]&#34;</span> <span class=err>&#34;[</span><span class=na>1-4</span><span class=err>]&#34;)</span> <span class=err>}}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=err>&lt;!</span><span class=na>--Scrollspy--</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=p>&lt;</span><span class=nt>div</span> <span class=na>class</span><span class=o>=</span><span class=s>&#34;toc&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>div</span> <span class=na>class</span><span class=o>=</span><span class=s>&#34;page-header&#34;</span><span class=p>&gt;&lt;</span><span class=nt>strong</span><span class=p>&gt;</span>- CATALOG -<span class=p>&lt;/</span><span class=nt>strong</span><span class=p>&gt;&lt;/</span><span class=nt>div</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;</span><span class=nt>div</span> <span class=na>id</span><span class=o>=</span><span class=s>&#34;page-scrollspy&#34;</span> <span class=na>class</span><span class=o>=</span><span class=s>&#34;toc-nav&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        {{ range $headers }}
+</span></span><span class=line><span class=cl>        {{ $header := . }}
+</span></span><span class=line><span class=cl>            {{ range first 1 (findRE $re $header 1) }}
+</span></span><span class=line><span class=cl>                {{ range findRE $renum . 1 }}
+</span></span><span class=line><span class=cl>                {{ $next_heading := (cond (eq $h1_n 0) (sub (int .) 1 ) (int . ) ) }}
+</span></span><span class=line><span class=cl>                    {{ range seq $next_heading }}
+</span></span><span class=line><span class=cl>                    <span class=p>&lt;</span><span class=nt>ul</span> <span class=na>class</span><span class=o>=</span><span class=s>&#34;nav&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>                    {{end}}
+</span></span><span class=line><span class=cl>                    {{ $anchorId := (replaceRE &#34;.* id=\&#34;(.*?)\&#34;.*&#34; &#34;$1&#34; $header ) }}
+</span></span><span class=line><span class=cl>                        <span class=p>&lt;</span><span class=nt>li</span> <span class=na>class</span><span class=o>=</span><span class=s>&#34;nav-item&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>                            <span class=p>&lt;</span><span class=nt>a</span> <span class=na>class</span><span class=o>=</span><span class=s>&#34;nav-link text-left&#34;</span> <span class=na>href</span><span class=o>=</span><span class=s>&#34;#{{ $anchorId }}&#34;</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>                            {{ $header | plainify | htmlUnescape }}
+</span></span><span class=line><span class=cl>                            <span class=p>&lt;/</span><span class=nt>a</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>                        <span class=p>&lt;/</span><span class=nt>li</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>                    <span class=c>&lt;!-- close list --&gt;</span>
+</span></span><span class=line><span class=cl>                    {{ range seq $next_heading }}
+</span></span><span class=line><span class=cl>                    <span class=p>&lt;/</span><span class=nt>ul</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>                    {{ end }}
+</span></span><span class=line><span class=cl>                {{ end }}
+</span></span><span class=line><span class=cl>            {{ end }}
+</span></span><span class=line><span class=cl>        {{ end }}
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=p>&lt;/</span><span class=nt>div</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=p>&lt;/</span><span class=nt>div</span><span class=p>&gt;</span>
+</span></span><span class=line><span class=cl><span class=c>&lt;!--Scrollspy--&gt;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>{{ end }}</span></span></code></pre></td></tr></table></div></div><h2 id=三自定义js class=heading-element><span>三、自定义js</span>
+<a href=#%e4%b8%89%e8%87%aa%e5%ae%9a%e4%b9%89js class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>在站点项目根目录下面，在<code>/assets/js/custom.js</code>中添加自定义的js代码。</p><h3 id=31-设置网站title动态 class=heading-element><span>3.1 设置网站title动态</span>
+<a href=#31-%e8%ae%be%e7%bd%ae%e7%bd%91%e7%ab%99title%e5%8a%a8%e6%80%81 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>设置网站title动态，当网页失去焦点时改变网页title，引起用户注意。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-js data-lang=js><span class=line><span class=cl><span class=c1>// 动态设置网站title，当网页失去焦点时改变网页title，引起用户注意。
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nb>document</span><span class=p>.</span><span class=nx>addEventListener</span><span class=p>(</span><span class=s1>&#39;DOMContentLoaded&#39;</span><span class=p>,</span> <span class=kd>function</span> <span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// 调试日志
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=c1>// console.log(&#39;[动态标题] 脚本已加载&#39;);
+</span></span></span><span class=line><span class=cl><span class=c1></span>
+</span></span><span class=line><span class=cl>    <span class=kr>const</span> <span class=nx>originTitle</span> <span class=o>=</span> <span class=nb>document</span><span class=p>.</span><span class=nx>title</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=kd>let</span> <span class=nx>titleTimer</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>function</span> <span class=nx>updateTitle</span><span class=p>(</span><span class=nx>newTitle</span><span class=p>,</span> <span class=nx>duration</span> <span class=o>=</span> <span class=mi>2000</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nb>document</span><span class=p>.</span><span class=nx>title</span> <span class=o>=</span> <span class=nx>newTitle</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=nx>duration</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>clearTimeout</span><span class=p>(</span><span class=nx>titleTimer</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=nx>titleTimer</span> <span class=o>=</span> <span class=nx>setTimeout</span><span class=p>(()</span> <span class=p>=&gt;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=nb>document</span><span class=p>.</span><span class=nx>title</span> <span class=o>=</span> <span class=nx>originTitle</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=p>},</span> <span class=nx>duration</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// 页面可见性变化
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nb>document</span><span class=p>.</span><span class=nx>addEventListener</span><span class=p>(</span><span class=s1>&#39;visibilitychange&#39;</span><span class=p>,</span> <span class=kd>function</span> <span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// console.log(&#39;[动态标题] 可见性变化:&#39;, document.hidden);
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=k>if</span> <span class=p>(</span><span class=nb>document</span><span class=p>.</span><span class=nx>hidden</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>updateTitle</span><span class=p>(</span><span class=s1>&#39;👀 别走呀～ &#39;</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>updateTitle</span><span class=p>(</span><span class=s1>&#39;🎉 欢迎回来！ &#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>});</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// 窗口焦点变化
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nb>window</span><span class=p>.</span><span class=nx>addEventListener</span><span class=p>(</span><span class=s1>&#39;blur&#39;</span><span class=p>,</span> <span class=kd>function</span> <span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// console.log(&#39;[动态标题] 窗口失去焦点&#39;);
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=nx>updateTitle</span><span class=p>(</span><span class=s1>&#39;💤 我在等你哦～ &#39;</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>});</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nb>window</span><span class=p>.</span><span class=nx>addEventListener</span><span class=p>(</span><span class=s1>&#39;focus&#39;</span><span class=p>,</span> <span class=kd>function</span> <span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// console.log(&#39;[动态标题] 窗口获得焦点&#39;);
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=nx>updateTitle</span><span class=p>(</span><span class=s1>&#39;😍 你回来啦！ &#39;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>});</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// console.log(&#39;[动态标题] 初始化完成&#39;);
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>});</span></span></span></code></pre></td></tr></table></div></div><h2 id=四设置github提交记录贪吃蛇动画 class=heading-element><span>四、设置Github提交记录贪吃蛇动画</span>
+<a href=#%e5%9b%9b%e8%ae%be%e7%bd%aegithub%e6%8f%90%e4%ba%a4%e8%ae%b0%e5%bd%95%e8%b4%aa%e5%90%83%e8%9b%87%e5%8a%a8%e7%94%bb class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>分两步完成：</p><ol><li>先通过 GitHub Action Platane/snk 生成 svg 动画并上传到 GitHub 仓库；</li><li>自定义博客首页头像 css，将贪食蛇动画 svg 作为首页头像的背景图片；</li></ol><h3 id=41-贪吃蛇动画生成 class=heading-element><span>4.1 贪吃蛇动画生成</span>
+<a href=#41-%e8%b4%aa%e5%90%83%e8%9b%87%e5%8a%a8%e7%94%bb%e7%94%9f%e6%88%90 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>找一个公开仓库添加 GitHub Action 工作流，第一次提交后可手动执行，定时任务等效东八区时间每天早上 5:30 和下午 17:30 执行，以保证贪食蛇动画中的提交记录更新。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Generate Snake Animation</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>on</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>workflow_dispatch</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>schedule</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c># equal UTC/GMT+8 &#34;30 5,17 * * *&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>cron</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;30 9,21 * * *&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>jobs</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>generate</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>permissions</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>contents</span><span class=p>:</span><span class=w> </span><span class=l>write</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>runs-on</span><span class=p>:</span><span class=w> </span><span class=l>ubuntu-latest</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>timeout-minutes</span><span class=p>:</span><span class=w> </span><span class=m>10</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>steps</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=c># https://github.com/Platane/snk</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>generate github-contribution-grid-snake.svg</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>uses</span><span class=p>:</span><span class=w> </span><span class=l>Platane/snk/svg-only@v3</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>with</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>github_user_name</span><span class=p>:</span><span class=w> </span><span class=l>${{ github.repository_owner }}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>outputs</span><span class=p>:</span><span class=w> </span><span class=p>|</span><span class=sd>
+</span></span></span><span class=line><span class=cl><span class=sd>            dist/github-contribution-grid-snake.svg
+</span></span></span><span class=line><span class=cl><span class=sd>            dist/github-contribution-grid-snake-dark.svg?palette=github-dark            </span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=c># push the content of &lt;build_dir&gt; to a branch</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=c># the content will be available at https://raw.githubusercontent.com/&lt;github_user&gt;/&lt;repository&gt;/&lt;target_branch&gt;/&lt;file&gt;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>push github-contribution-grid-snake.svg to the output branch</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>uses</span><span class=p>:</span><span class=w> </span><span class=l>crazy-max/ghaction-github-pages@v4</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>with</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>target_branch</span><span class=p>:</span><span class=w> </span><span class=l>output</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>build_dir</span><span class=p>:</span><span class=w> </span><span class=l>dist</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>env</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>GITHUB_TOKEN</span><span class=p>:</span><span class=w> </span><span class=l>${{ secrets.GITHUB_TOKEN }}</span></span></span></code></pre></td></tr></table></div></div><p>任务执行后，在仓库的 output 分支可以看到生成的 svg 文件：<figure><img src=https://images.benelin.site/posts/github-contribution-grid-snake.jpg></figure></p><h3 id=42-自定义首页头像css class=heading-element><span>4.2 自定义首页头像css</span>
+<a href=#42-%e8%87%aa%e5%ae%9a%e4%b9%89%e9%a6%96%e9%a1%b5%e5%a4%b4%e5%83%8fcss class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>通过浏览器控制台定位头像元素：<figure><img src=https://images.benelin.site/posts/home-avatar.jpg></figure>然后添加对应 css 样式：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-scss data-lang=scss><span class=line><span class=cl><span class=c1>// assets/css/_custom.scss
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nc>.home</span> <span class=nc>.home-profile</span> <span class=nc>.home-avatar</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=na>background-size</span><span class=o>:</span> <span class=mi>100</span><span class=kt>%</span> <span class=mi>100</span><span class=kt>%</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=na>padding</span><span class=o>:</span> <span class=mi>1</span><span class=kt>rem</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=na>background-repeat</span><span class=o>:</span> <span class=ni>no-repeat</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=na>background-position</span><span class=o>:</span> <span class=ni>center</span> <span class=ni>top</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=na>background-image</span><span class=o>:</span> <span class=sx>url(https://raw.githubusercontent.com/beneliu/blog-resource/output/github-contribution-grid-snake.svg)</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=o>[</span><span class=nt>data-theme</span><span class=o>=</span><span class=s1>&#39;dark&#39;</span><span class=o>]</span> <span class=k>&amp;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=na>background-image</span><span class=o>:</span> <span class=sx>url(https://raw.githubusercontent.com/beneliu/blog-resource/output/github-contribution-grid-snake-dark.svg)</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>因为<code>background-image</code>地址国内有时无法正常显示，可以用jsdelivr加速。将地址替换成<code>https://cdn.jsdelivr.net/gh/beneliu/blog-resource@output/github-contribution-grid-snake.svg</code>。jsdelivr的具体使用方法可以看<a href=https://www.jsdelivr.com/ target=_blank rel="external nofollow noopener noreferrer">jsdelivr</a>。</p><h2 id=五添加友链 class=heading-element><span>五、添加友链</span>
+<a href=#%e4%ba%94%e6%b7%bb%e5%8a%a0%e5%8f%8b%e9%93%be class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>先创建友情链接页面：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>hugo new content friends/index.md</span></span></code></pre></td></tr></table></div></div><p>在 Front matter 中设置<code>layout: friends</code>，并在<code>yourSite/data/</code>目录下创建<code>friends.yml</code>，其内容格式如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=c># 朋友/站点信息例子</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span>- <span class=nt>nickname</span><span class=p>:</span><span class=w> </span><span class=l>朋友名字</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>avatar</span><span class=p>:</span><span class=w> </span><span class=l>朋友头像</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>url</span><span class=p>:</span><span class=w> </span><span class=l>站点链接</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>description</span><span class=p>:</span><span class=w> </span><span class=l>对朋友或其站点的说明</span></span></span></code></pre></td></tr></table></div></div><p>然后就可以将生成的友链页面添加到主页菜单栏了。</p><p><strong>参考资料：</strong></p><ol><li><a href=https://fixit.lruihao.cn/zh-cn/documentation/content-management/introduction/ target=_blank rel="external nofollow noopener noreferrer">内容管理概述 | FixiIt</a></li><li><a href=https://fixit.lruihao.cn/zh-cn/references/blocks/ target=_blank rel="external nofollow noopener noreferrer">开放的自定义块 | FixiIt</a></li><li><a href=https://geekswg.js.cool/posts/2023/fixit-beautification/ target=_blank rel="external nofollow noopener noreferrer">Fixit-主题美化记录</a></li><li><a href=https://www.jsdelivr.com/ target=_blank rel="external nofollow noopener noreferrer">jsdelivr</a></li><li><a href=https://www.ariesme.com/posts/2019/add_toc_for_hugo/ target=_blank rel="external nofollow noopener noreferrer">Hugo添加文章目录toc</a></li></ol></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span title="更新于 2025-04-06 18:49:20">更新于 2025-04-06&nbsp;</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 X" data-sharer=twitter data-url=https://beneliu.github.io/posts/hugo-fixit/a9f08a3/ data-title=Fixit-主题美化 data-hashtags=建站笔记><i class="fa-brands fa-x-twitter fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 Facebook" data-sharer=facebook data-url=https://beneliu.github.io/posts/hugo-fixit/a9f08a3/ data-hashtag=建站笔记><i class="fa-brands fa-facebook-square fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://beneliu.github.io/posts/hugo-fixit/a9f08a3/ data-title=Fixit-主题美化><i class="fa-brands fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fa-solid fa-tags fa-fw me-1" aria-hidden=true></i><a href=/tags/%E5%BB%BA%E7%AB%99%E7%AC%94%E8%AE%B0/ class=post-tag title="标签 - 建站笔记">建站笔记</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/posts/hugo-fixit/738f0f6/ class=post-nav-item rel=prev title=Hugo学习><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i>Hugo学习</a><a href=/posts/hugo-fixit/3c94d6e/ class=post-nav-item rel=next title="Hugo 自定义页面">Hugo 自定义页面<i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div class=post-reward><div class=comment>Buy me a coffee</div><input type=checkbox class=reward-input name=reward id=fi-reward hidden>
+<label class=reward-button for=fi-reward><i class="fa-solid fa-qrcode fa-fw" aria-hidden=true></i>赞赏</label><div class=reward-ways data-mode=static><div><img src=/images/alipay.jpg alt="beneliu 支付宝"><span>支付宝</span></div><div><img src=/images/wechatpay.jpg alt="beneliu 微信"><span>微信</span></div></div></div><div id=comments><div id=giscus class=comment><script src=https://giscus.app/client.js data-repo=beneliu/beneliu.github.io data-repo-id=R_kgDOOQGXgQ data-category=Announcements data-category-id=DIC_kwDOOQGXgc4CovKm data-mapping=pathname data-strict=0 data-theme=preferred_color_scheme data-reactions-enabled=1 data-emit-metadata=0 data-input-position=top data-lang=zh-CN data-loading=lazy crossorigin=anonymous async defer></script></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://giscus.app/ rel="external nofollow noopener noreferrer">giscus</a>.</noscript></div></article><aside class=toc id=toc-auto aria-label=目录><h2 class=toc-title>目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden=true></i></h2><div class="toc-content always-active" id=toc-content-auto></div></aside></main><footer class=footer><div class=footer-container><div class="footer-line powered order-last">由 <a href=https://gohugo.io/ target=_blank rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class=hugo-icon src=/images/hugo.min.svg alt="Hugo logo"> Hugo</a> 强力驱动 | 主题 - <a href=https://github.com/hugo-fixit/FixIt target=_blank rel=external title="FixIt v0.3.17-8212d6fd"><img class=fixit-icon src=/images/fixit.min.svg alt="FixIt logo"> FixIt</a></div><div class="footer-line copyright order-first" itemscope itemtype=http://schema.org/CreativeWork><i class="fa-regular fa-copyright fa-fw" aria-hidden=true></i>
+<span itemprop=copyrightYear>2025</span><span class=author itemprop=copyrightHolder>
+<a href=https://github.com/beneliu target=_blank rel="external nofollow noopener noreferrer">beneliu</a></span></div><div class="footer-line statistics"><span class=site-time title=网站运行中……><i class="fa-solid fa-heartbeat fa-fw animate-icon fa-fw animate-icon" aria-hidden=true></i><span class="ms-1 d-none">Runing</span><span class="run-times ms-1">网站运行中……</span></span></div><div class="footer-line visitor"><span id=busuanzi_container_site_uv title=总访客数><i class="fa-regular fa-user fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_site_uv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span><span id=busuanzi_container_site_pv class=footer-divider title=总访问量><i class="fa-regular fa-eye fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_site_pv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span></div></div></footer></div><div class=widgets><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role=button aria-label=回到顶部><i class="fa-solid fa-arrow-up fa-fw" aria-hidden=true></i><span class=variant-numeric>0%</span></div><div class="fixed-button view-comments d-none" role=button aria-label=查看评论><i class="fa-solid fa-comment fa-fw" aria-hidden=true></i></div></div><a href=https://github.com/beneliu title="Visit Me on GitHub" target=_blank rel="external nofollow" class="github-corner left d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0 0 115 115h15l12 27L250 250V0z"/><path d="M128.3 109C113.8 99.7 119 89.6 119 89.6 122 82.7 120.5 78.6 120.5 78.6 119.2 72 123.4 76.3 123.4 76.3 127.3 80.9 125.5 87.3 125.5 87.3 122.9 97.6 130.6 101.9 134.4 103.2" fill="currentcolor" style="transform-origin:130px 106px" class="octo-arm"/><path d="M115 115C114.9 115.1 118.7 116.5 119.8 115.4l13.9-13.8C136.9 99.2 139.9 98.4 142.2 98.6 133.8 88 127.5 74.4 143.8 58 148.5 53.4 154 51.2 159.7 51 160.3 49.4 163.2 43.6 171.4 40.1 171.4 40.1 176.1 42.5 178.8 56.2 183.1 58.6 187.2 61.8 190.9 65.4 194.5 69 197.7 73.2 200.1 77.6 213.8 80.2 216.3 84.9 216.3 84.9 212.7 93.1 206.9 96 205.4 96.6 205.1 102.4 203 107.8 198.3 112.5 181.9 128.9 168.3 122.5 157.7 114.1 157.9 116.9 156.7 120.9 152.7 124.9L141 136.5C139.8 137.7 141.6 141.9 141.8 141.8z" fill="currentcolor" class="octo-body"/></svg></a><div id=mask></div><div class=reading-progress-bar style=left:0;top:0></div><noscript><div class=noscript-warning>该网站在启用 JavaScript 的情况下效果最佳。</div></noscript></div><link rel=stylesheet href=/lib/cookieconsent/cookieconsent.min.css><script src=/lib/autocomplete/autocomplete.min.js defer></script><script src=/lib/fuse/fuse.min.js defer></script><script src=/lib/sharer/sharer.min.js async defer></script><script src=/lib/cookieconsent/cookieconsent.min.js defer></script><script src=https://vercount.one/js async defer></script><script>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:10},comment:{enable:!0,expired:!1,giscus:{darkTheme:"dark",lightTheme:"light",origin:"https://giscus.app"}},cookieconsent:{content:{dismiss:"同意",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验。"},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},search:{distance:100,findAllMatches:!1,fuseIndexURL:"/search.json",highlightTag:"em",ignoreFieldNorm:!1,ignoreLocation:!1,isCaseSensitive:!1,location:0,maxResultLength:10,minMatchCharLength:2,noResultsFound:"没有找到结果",snippetLength:30,threshold:.3,type:"fuse",useExtendedSearch:!1},siteTime:"2025-04-02T15:30:00+08:00",version:"v0.3.17-8212d6fd"}</script><script src=/js/theme.min.js defer></script><script src=/js/custom.min.js defer></script></body></html>
