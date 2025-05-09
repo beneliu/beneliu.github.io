@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AI应用 - 分类 - 字节飞鸿</title><link>https://beneliu.github.io/categories/ai%E5%BA%94%E7%94%A8/</link><description>字节飞鸿</description><generator>Hugo 0.145.0 &amp; FixIt v0.3.17-8212d6fd</generator><language>zh-cn</language><managingEditor>goupgrade@outlook.com (beneliu)</managingEditor><webMaster>goupgrade@outlook.com (beneliu)</webMaster><lastBuildDate>Fri, 18 Apr 2025 13:27:28 +0800</lastBuildDate><atom:link href="https://beneliu.github.io/categories/ai%E5%BA%94%E7%94%A8/index.xml" rel="self" type="application/rss+xml"/><item><title>MCP和LLM的调用细节</title><link>https://beneliu.github.io/posts/ai/f6ee174/</link><pubDate>Fri, 18 Apr 2025 13:27:28 +0800</pubDate><author>goupgrade@outlook.com (beneliu)</author><guid>https://beneliu.github.io/posts/ai/f6ee174/</guid><category domain="https://beneliu.github.io/categories/ai%E5%BA%94%E7%94%A8/">AI应用</category><description>&lt;div class="details admonition info open">
+ &lt;div class="details-summary admonition-title">&lt;i class="icon fa-fw fa-solid fa-circle-info" aria-hidden="true">&lt;/i>内容简介&lt;i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden="true">&lt;/i>&lt;/div>
+ &lt;div class="details-content">
+ &lt;div class="admonition-content">介绍MCP和LLM之间的协作细节，讲解LLM是如何利用MCP服务来扩展自己的边际能力的。&lt;/div>
+ &lt;/div>
+&lt;/div>
+&lt;p>在用go做了几个MCP的Demo服务后，又对MCP的架构和协议细节进行了深入地学习，对MCP的理解深刻了很多。但是在开发过程中还是有两个关键的问题未得到解答：&lt;/p>
+&lt;ul>
+&lt;li>cline插件、我的MCP服务、大模型这三者之间的调用流程是怎样的？&lt;/li>
+&lt;li>大模型是在什么时候确定使用哪些MCP服务的呢？&lt;/li>
+&lt;/ul>
+&lt;p>这里需要注意下，我使用的是vscode的cline插件，所以这里拿cline举例，但是其实客户端也可以是cursor、cherry studio等其他客户端。&lt;/p>
+&lt;p>在 MCP 官网为我们提供了一个&lt;a href="https://modelcontextprotocol.io/quickstart/server#what%E2%80%99s-happening-under-the-hood"target="_blank" rel="external nofollow noopener noreferrer">解释&lt;/a>：&lt;/p>
+&lt;ol>
+&lt;li>客户端将你的问题发送给 Claude&lt;/li>
+&lt;li>Claude 分析可用的工具，并决定使用哪一个或多个&lt;/li>
+&lt;li>客户端通过 MCP Server 执行所选的工具&lt;/li>
+&lt;li>工具的执行结果被送回给 Claude&lt;/li>
+&lt;li>Claude 结合执行结果生成回答&lt;/li>
+&lt;li>回应最终展示给用户&lt;/li>
+&lt;/ol>
+&lt;p>从以上的解释可以看出，大模型和MCP服务之间的调用过程是分两步完成的：&lt;/p>
+&lt;ol>
+&lt;li>由 LLM 确定使用哪些 MCP Server&lt;/li>
+&lt;li>执行对应的 MCP Server 并对执行结果进行重新处理&lt;/li>
+&lt;/ol>
+&lt;p>所以 MCP Server 是由大模型主动选择并调用的。但是大模型具体又是如何确定该使用哪些工具呢？从 MCP 官方提供的 &lt;a href="https://github.com/modelcontextprotocol/python-sdk/blob/main/examples/clients/simple-chatbot/mcp_simple_chatbot/main.py"target="_blank" rel="external nofollow noopener noreferrer">pyhton client example&lt;/a> 中可以得到答案：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;span class="lnt">43
+&lt;/span>&lt;span class="lnt">44
+&lt;/span>&lt;span class="lnt">45
+&lt;/span>&lt;span class="lnt">46
+&lt;/span>&lt;span class="lnt">47
+&lt;/span>&lt;span class="lnt">48
+&lt;/span>&lt;span class="lnt">49
+&lt;/span>&lt;span class="lnt">50
+&lt;/span>&lt;span class="lnt">51
+&lt;/span>&lt;span class="lnt">52
+&lt;/span>&lt;span class="lnt">53
+&lt;/span>&lt;span class="lnt">54
+&lt;/span>&lt;span class="lnt">55
+&lt;/span>&lt;span class="lnt">56
+&lt;/span>&lt;span class="lnt">57
+&lt;/span>&lt;span class="lnt">58
+&lt;/span>&lt;span class="lnt">59
+&lt;/span>&lt;span class="lnt">60
+&lt;/span>&lt;span class="lnt">61
+&lt;/span>&lt;span class="lnt">62
+&lt;/span>&lt;span class="lnt">63
+&lt;/span>&lt;span class="lnt">64
+&lt;/span>&lt;span class="lnt">65
+&lt;/span>&lt;span class="lnt">66
+&lt;/span>&lt;span class="lnt">67
+&lt;/span>&lt;span class="lnt">68
+&lt;/span>&lt;span class="lnt">69
+&lt;/span>&lt;span class="lnt">70
+&lt;/span>&lt;span class="lnt">71
+&lt;/span>&lt;span class="lnt">72
+&lt;/span>&lt;span class="lnt">73
+&lt;/span>&lt;span class="lnt">74
+&lt;/span>&lt;span class="lnt">75
+&lt;/span>&lt;span class="lnt">76
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl"> &lt;span class="k">async&lt;/span> &lt;span class="k">def&lt;/span> &lt;span class="nf">start&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">-&amp;gt;&lt;/span> &lt;span class="kc">None&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;&amp;#34;&amp;#34;Main chat session handler.&amp;#34;&amp;#34;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">server&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">servers&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">await&lt;/span> &lt;span class="n">server&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">initialize&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">except&lt;/span> &lt;span class="ne">Exception&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="n">e&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">logging&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">error&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;Failed to initialize server: &lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">await&lt;/span> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cleanup_servers&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">all_tools&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">server&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">servers&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">tools&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="k">await&lt;/span> &lt;span class="n">server&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">list_tools&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">all_tools&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">extend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">tools&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">tools_description&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">join&lt;/span>&lt;span class="p">([&lt;/span>&lt;span class="n">tool&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">format_for_llm&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="n">tool&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">all_tools&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">system_message&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;You are a helpful assistant with access to these tools:&lt;/span>&lt;span class="se">\n\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">tools_description&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;Choose the appropriate tool based on the user&amp;#39;s question. &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;If no tool is needed, reply directly.&lt;/span>&lt;span class="se">\n\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;IMPORTANT: When you need to use a tool, you must ONLY respond with &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;the exact JSON object format below, nothing else:&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;{&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39; &amp;#34;tool&amp;#34;: &amp;#34;tool-name&amp;#34;,&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39; &amp;#34;arguments&amp;#34;: {&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39; &amp;#34;argument-name&amp;#34;: &amp;#34;value&amp;#34;&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34; }&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;}&lt;/span>&lt;span class="se">\n\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;After receiving a tool&amp;#39;s response:&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;1. Transform the raw data into a natural, conversational response&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;2. Keep responses concise but informative&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;3. Focus on the most relevant information&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;4. Use appropriate context from the user&amp;#39;s question&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;5. Avoid simply repeating the raw data&lt;/span>&lt;span class="se">\n\n&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;Please use only the tools that are explicitly defined above.&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">messages&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[{&lt;/span>&lt;span class="s2">&amp;#34;role&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;system&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;content&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">system_message&lt;/span>&lt;span class="p">}]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">while&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">user_input&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="nb">input&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;You: &amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">strip&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">lower&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">user_input&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="s2">&amp;#34;quit&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;exit&amp;#34;&lt;/span>&lt;span class="p">]:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">logging&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">Exiting...&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">messages&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">({&lt;/span>&lt;span class="s2">&amp;#34;role&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;user&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;content&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">user_input&lt;/span>&lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">llm_response&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">llm_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_response&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">messages&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">logging&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">Assistant: &lt;/span>&lt;span class="si">%s&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">llm_response&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">result&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="k">await&lt;/span> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">process_llm_response&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">llm_response&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">result&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="n">llm_response&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">messages&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">({&lt;/span>&lt;span class="s2">&amp;#34;role&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;assistant&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;content&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">llm_response&lt;/span>&lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">messages&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">({&lt;/span>&lt;span class="s2">&amp;#34;role&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;system&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;content&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">result&lt;/span>&lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">final_response&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">llm_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_response&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">messages&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">logging&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">Final response: &lt;/span>&lt;span class="si">%s&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">final_response&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">messages&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">{&lt;/span>&lt;span class="s2">&amp;#34;role&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;assistant&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;content&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">final_response&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">messages&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">({&lt;/span>&lt;span class="s2">&amp;#34;role&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;assistant&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;content&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">llm_response&lt;/span>&lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">except&lt;/span> &lt;span class="ne">KeyboardInterrupt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">logging&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="se">\n&lt;/span>&lt;span class="s2">Exiting...&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">finally&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">await&lt;/span> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cleanup_servers&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">...&lt;/span> &lt;span class="c1"># 省略其他代码&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>从代码可以看出，在和大模型进行交互前，将所有工具的结构化描述放到&lt;code>tools_description&lt;/code>中，再添加到&lt;code>system_message&lt;/code>中，然后把&lt;code>system_message&lt;/code>和用户消息一起发送给模型。当模型分析用户请求后，它会决定是否需要调用工具：&lt;/p></description></item><item><title>MCP架构和协议解析</title><link>https://beneliu.github.io/posts/ai/130309a/</link><pubDate>Wed, 16 Apr 2025 11:00:07 +0800</pubDate><author>goupgrade@outlook.com (beneliu)</author><guid>https://beneliu.github.io/posts/ai/130309a/</guid><category domain="https://beneliu.github.io/categories/ai%E5%BA%94%E7%94%A8/">AI应用</category><description>&lt;div class="details admonition info open">
+ &lt;div class="details-summary admonition-title">&lt;i class="icon fa-fw fa-solid fa-circle-info" aria-hidden="true">&lt;/i>内容简介&lt;i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden="true">&lt;/i>&lt;/div>
+ &lt;div class="details-content">
+ &lt;div class="admonition-content">介绍 &lt;strong>MCP&lt;/strong> 的架构和协议实现。&lt;/div>
+ &lt;/div>
+&lt;/div>
+&lt;p>随着最近 MCP 在各类文章和评论区中逐渐活跃，我也找了几篇 MCP 相关的文章进行阅读学习，但是我发现这些文章都大同小异，没有让我真正深入理解MCP。我也跟着一些文章用 go 语言实现了几个 MCP 的Demo服务，但是对 MCP 依然一知半解，所以感觉还是得系统深入的学习并总结下。&lt;/p>
+&lt;h2 id="mcp是什么" class="heading-element">&lt;span>MCP是什么&lt;/span>
+ &lt;a href="#mcp%e6%98%af%e4%bb%80%e4%b9%88" class="heading-mark">
+ &lt;svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">&lt;path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z">&lt;/path>&lt;/svg>
+ &lt;/a>
+&lt;/h2>&lt;p>MCP 是一种开放协议，用于标准化应用程序如何为 LLM 提供上下文。可以将 MCP 视为 AI 应用程序的 USB-C 端口。正如 USB-C 提供了一种标准化的方式来将设备连接到各种外围设备和配件，MCP 也提供了一种标准化的方式，用于将 AI 模型连接到不同的数据源和工具。&lt;/p></description></item></channel></rss>

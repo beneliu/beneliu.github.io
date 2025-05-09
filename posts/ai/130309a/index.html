@@ -1,0 +1,354 @@
+<!doctype html><html itemscope itemtype=http://schema.org/WebPage lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=2"><meta name=robots content="noodp"><title>MCP架构和协议解析 - 字节飞鸿</title><meta name=author content="beneliu">
+<meta name=description content=" 内容简介 介绍 MCP 的架构和协议实现。 随着最近 MCP 在各类文章和评论区中逐渐活跃，我也找了几篇 MCP 相关的文章进行阅读学习，但是我发现这些文章都大同小异，没有让我真正深入理解MCP。我也跟着一些文章用 go 语言实现了几个 MCP 的Demo服务，但是对 MCP 依然一知半解，所以感觉还是得系统深入的学习并总结下。
+MCP是什么 MCP 是一种开放协议，用于标准化应用程序如何为 LLM 提供上下文。可以将 MCP 视为 AI 应用程序的 USB-C 端口。正如 USB-C 提供了一种标准化的方式来将设备连接到各种外围设备和配件，MCP 也提供了一种标准化的方式，用于将 AI 模型连接到不同的数据源和工具。
+"><meta name=keywords content='MCP,AI'><meta itemprop=name content="MCP架构和协议解析"><meta itemprop=description content="内容简介 介绍 MCP 的架构和协议实现。 随着最近 MCP 在各类文章和评论区中逐渐活跃，我也找了几篇 MCP 相关的文章进行阅读学习，但是我发现这些文章都大同小异，没有让我真正深入理解MCP。我也跟着一些文章用 go 语言实现了几个 MCP 的Demo服务，但是对 MCP 依然一知半解，所以感觉还是得系统深入的学习并总结下。
+MCP是什么 MCP 是一种开放协议，用于标准化应用程序如何为 LLM 提供上下文。可以将 MCP 视为 AI 应用程序的 USB-C 端口。正如 USB-C 提供了一种标准化的方式来将设备连接到各种外围设备和配件，MCP 也提供了一种标准化的方式，用于将 AI 模型连接到不同的数据源和工具。"><meta itemprop=datePublished content="2025-04-16T11:00:07+08:00"><meta itemprop=dateModified content="2025-04-16T11:00:07+08:00"><meta itemprop=wordCount content="893"><meta itemprop=keywords content="MCP,AI"><meta property="og:url" content="https://beneliu.github.io/posts/ai/130309a/"><meta property="og:site_name" content="字节飞鸿"><meta property="og:title" content="MCP架构和协议解析"><meta property="og:description" content="内容简介 介绍 MCP 的架构和协议实现。 随着最近 MCP 在各类文章和评论区中逐渐活跃，我也找了几篇 MCP 相关的文章进行阅读学习，但是我发现这些文章都大同小异，没有让我真正深入理解MCP。我也跟着一些文章用 go 语言实现了几个 MCP 的Demo服务，但是对 MCP 依然一知半解，所以感觉还是得系统深入的学习并总结下。
+MCP是什么 MCP 是一种开放协议，用于标准化应用程序如何为 LLM 提供上下文。可以将 MCP 视为 AI 应用程序的 USB-C 端口。正如 USB-C 提供了一种标准化的方式来将设备连接到各种外围设备和配件，MCP 也提供了一种标准化的方式，用于将 AI 模型连接到不同的数据源和工具。"><meta property="og:locale" content="zh_cn"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2025-04-16T11:00:07+08:00"><meta property="article:modified_time" content="2025-04-16T11:00:07+08:00"><meta property="article:tag" content="MCP"><meta property="article:tag" content="AI"><meta name=twitter:card content="summary"><meta name=twitter:title content="MCP架构和协议解析"><meta name=twitter:description content="内容简介 介绍 MCP 的架构和协议实现。 随着最近 MCP 在各类文章和评论区中逐渐活跃，我也找了几篇 MCP 相关的文章进行阅读学习，但是我发现这些文章都大同小异，没有让我真正深入理解MCP。我也跟着一些文章用 go 语言实现了几个 MCP 的Demo服务，但是对 MCP 依然一知半解，所以感觉还是得系统深入的学习并总结下。
+MCP是什么 MCP 是一种开放协议，用于标准化应用程序如何为 LLM 提供上下文。可以将 MCP 视为 AI 应用程序的 USB-C 端口。正如 USB-C 提供了一种标准化的方式来将设备连接到各种外围设备和配件，MCP 也提供了一种标准化的方式，用于将 AI 模型连接到不同的数据源和工具。"><meta name=application-name content="FixIt"><meta name=apple-mobile-web-app-title content="FixIt"><meta name=theme-color data-light=#f8f8f8 data-dark=#252627 content="#f8f8f8"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=canonical type=text/html href=https://beneliu.github.io/posts/ai/130309a/ title="MCP架构和协议解析 - 字节飞鸿"><link rel=prev type=text/html href=https://beneliu.github.io/posts/devops/338be2a/ title=nacos集群搭建><link rel=next type=text/html href=https://beneliu.github.io/posts/ai/f6ee174/ title=MCP和LLM的调用细节><link rel=alternate type=text/markdown href=https://beneliu.github.io/posts/ai/130309a/index.md title="MCP架构和协议解析 - 字节飞鸿"><link rel=stylesheet href=/css/style.min.css><link rel=preload href=/lib/fontawesome-free/all.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=/lib/fontawesome-free/all.min.css></noscript><link rel=preload href=/lib/animate/animate.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=/lib/animate/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"MCP架构和协议解析","inLanguage":"zh-cn","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/beneliu.github.io\/posts\/ai\/130309a\/"},"genre":"posts","keywords":"MCP, AI","wordcount":893,"url":"https:\/\/beneliu.github.io\/posts\/ai\/130309a\/","datePublished":"2025-04-16T11:00:07+08:00","dateModified":"2025-04-16T11:00:07+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"beneliu"},"description":""}</script><script src=/js/head/color-scheme.min.js></script></head><body data-header-desktop=sticky data-header-mobile=auto><div class=wrapper data-page-style=normal><header class="desktop animate__faster" id=header-desktop><div class=header-wrapper data-github-corner=left><div class=header-title><a href=/ title=字节飞鸿><img class=logo src=/images/avatar.png alt=字节飞鸿 height=32 width=32><span class=header-title-text>字节飞鸿</span></a><span class=header-subtitle></span></div><nav><ul class=menu><li class=menu-item><a class=menu-link href=/><i class="fa-solid fa-home fa-fw fa-sm" aria-hidden=true></i> 首页</a></li><li class="menu-item has-children"><a class=menu-link href=javascript:void(0);><i class="fa-solid fa-blog fa-fw fa-sm" aria-hidden=true></i> 博客</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden=true></i><ul class=sub-menu><li class=menu-item><a class=menu-link href=/posts/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 文章</a></li><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-th-list fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li></ul></li><li class=menu-item><a class=menu-link href=/friends><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/websites><i class="fa-solid fa-globe fa-fw fa-sm" aria-hidden=true></i> 站点</a></li><li class="menu-item has-children"><a class=menu-link href=javascript:void(0);><i class="fa-solid fa-heart-pulse fa-fw fa-sm" aria-hidden=true></i> 趣味</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden=true></i><ul class=sub-menu><li class=menu-item><a class=menu-link href=https://mikutap.nikunokoya.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-music fa-fw fa-sm" aria-hidden=true></i> Mikutap打碟</a></li><li class=menu-item><a class=menu-link href=https://www.skylinewebcams.com rel="noopener noreferrer" target=_blank><i class="fa-solid fa-video fa-fw fa-sm" aria-hidden=true></i> 全球实况</a></li><li class=menu-item><a class=menu-link href=https://newsnow.busiyi.world rel="noopener noreferrer" target=_blank><i class="fa-solid fa-newspaper fa-fw fa-sm" aria-hidden=true></i> 实时热点新闻</a></li><li class=menu-item><a class=menu-link href=https://dapanyuntu.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-chart-line fa-fw fa-sm" aria-hidden=true></i> 大盘实况</a></li></ul></li><li class="menu-item delimiter"></li><li class="menu-item search" id=search-desktop><input type=text placeholder=搜索文章标题或内容…… id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></li><li class="menu-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></li></ul></nav></div></header><header class="mobile animate__faster" id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=字节飞鸿><img class=logo src=/images/avatar.png alt=字节飞鸿 height=26 width=26><span class=header-title-text>字节飞鸿</span></a><span class=header-subtitle></span></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><nav><ul class=menu id=menu-mobile><li class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章标题或内容…… id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>取消</a></li><li class=menu-item><a class=menu-link href=/><i class="fa-solid fa-home fa-fw fa-sm" aria-hidden=true></i> 首页</a></li><li class=menu-item><span class=nested-item><a class=menu-link href=javascript:void(0);><i class="fa-solid fa-blog fa-fw fa-sm" aria-hidden=true></i> 博客</a>
+<i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden=true></i></span><ul class=sub-menu><li class=menu-item><a class=menu-link href=/posts/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 文章</a></li><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-th-list fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li></ul></li><li class=menu-item><a class=menu-link href=/friends><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/websites><i class="fa-solid fa-globe fa-fw fa-sm" aria-hidden=true></i> 站点</a></li><li class=menu-item><span class=nested-item><a class=menu-link href=javascript:void(0);><i class="fa-solid fa-heart-pulse fa-fw fa-sm" aria-hidden=true></i> 趣味</a>
+<i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden=true></i></span><ul class=sub-menu><li class=menu-item><a class=menu-link href=https://mikutap.nikunokoya.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-music fa-fw fa-sm" aria-hidden=true></i> Mikutap打碟</a></li><li class=menu-item><a class=menu-link href=https://www.skylinewebcams.com rel="noopener noreferrer" target=_blank><i class="fa-solid fa-video fa-fw fa-sm" aria-hidden=true></i> 全球实况</a></li><li class=menu-item><a class=menu-link href=https://newsnow.busiyi.world rel="noopener noreferrer" target=_blank><i class="fa-solid fa-newspaper fa-fw fa-sm" aria-hidden=true></i> 实时热点新闻</a></li><li class=menu-item><a class=menu-link href=https://dapanyuntu.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-chart-line fa-fw fa-sm" aria-hidden=true></i> 大盘实况</a></li></ul></li><li class="menu-item menu-system"><span class="menu-system-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></span></li></ul></nav></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=container><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label=合集></aside><article class="page single"><div class=header><h1 class="single-title animate__animated animate__flipInX"><span>MCP架构和协议解析</span></h1></div><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://github.com/beneliu title=作者 target=_blank rel="external nofollow noopener noreferrer author" class=author><img class=avatar src=/images/avatar.png alt=beneliu height=16 width=16>&nbsp;beneliu</a></span><span class=post-included-in>&nbsp;收录于 <a href=/categories/ai%E5%BA%94%E7%94%A8/ class=post-category title="分类 - AI应用"><i class="fa-regular fa-folder fa-fw" aria-hidden=true></i> AI应用</a></span></div><div class=post-meta-line><span title="发布于 2025-04-16 11:00:07"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden=true></i><time datetime=2025-04-16>2025-04-16</time></span>&nbsp;<span title="893 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden=true></i>约 900 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden=true></i>预计阅读 5 分钟</span>&nbsp;<span id=busuanzi_container_page_pv class="busuanzi_visitors comment-visitors" data-flag-title=MCP架构和协议解析><i class="fa-regular fa-eye fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_page_pv>-</span>&nbsp;次阅读
+</span>&nbsp;</div></div><div class="details toc" id=toc-static data-kept=false><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fa-solid fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#mcp是什么>MCP是什么</a></li><li><a href=#为什么要用mcp>为什么要用MCP</a></li><li><a href=#mcp架构>MCP架构</a><ul><li><a href=#核心架构解析>核心架构解析</a></li><li><a href=#组件详情>组件详情</a></li></ul></li><li><a href=#协议基础>协议基础</a><ul><li><a href=#请求>请求</a></li><li><a href=#响应>响应</a></li><li><a href=#通知>通知</a></li></ul></li><li><a href=#生命周期>生命周期</a><ul><li><a href=#初始化阶段>初始化阶段</a></li><li><a href=#操作阶段>操作阶段</a></li><li><a href=#关闭阶段>关闭阶段</a></li></ul></li><li><a href=#传输机制>传输机制</a><ul><li><a href=#标准输入输出stdio>标准输入输出（stdio）</a></li><li><a href=#基于-sse-的-http>基于 SSE 的 HTTP</a></li><li><a href=#自定义传输>自定义传输</a></li></ul></li></ul></nav></div></div><div class=content id=content><div class="details admonition info open"><div class="details-summary admonition-title"><i class="icon fa-fw fa-solid fa-circle-info" aria-hidden=true></i>内容简介<i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden=true></i></div><div class=details-content><div class=admonition-content>介绍 <strong>MCP</strong> 的架构和协议实现。</div></div></div><p>随着最近 MCP 在各类文章和评论区中逐渐活跃，我也找了几篇 MCP 相关的文章进行阅读学习，但是我发现这些文章都大同小异，没有让我真正深入理解MCP。我也跟着一些文章用 go 语言实现了几个 MCP 的Demo服务，但是对 MCP 依然一知半解，所以感觉还是得系统深入的学习并总结下。</p><h2 id=mcp是什么 class=heading-element><span>MCP是什么</span>
+<a href=#mcp%e6%98%af%e4%bb%80%e4%b9%88 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>MCP 是一种开放协议，用于标准化应用程序如何为 LLM 提供上下文。可以将 MCP 视为 AI 应用程序的 USB-C 端口。正如 USB-C 提供了一种标准化的方式来将设备连接到各种外围设备和配件，MCP 也提供了一种标准化的方式，用于将 AI 模型连接到不同的数据源和工具。</p><p>从上面这段官方的介绍来看，MCP 的目标是创建一个通用标准，使 AI 应用程序的开发和集成变得更加简单和统一。这里我引用一张流传很广的图片来帮助理解：<figure><img src=https://images.benelin.site/posts/mcp-architecture.jpg width=650 height=650></figure></p><h2 id=为什么要用mcp class=heading-element><span>为什么要用MCP</span>
+<a href=#%e4%b8%ba%e4%bb%80%e4%b9%88%e8%a6%81%e7%94%a8mcp class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>我们使用LLM的方式基本都是在客户端将问题发给大模型，然后大模型返回结果。面对一些特定的问题，还需要人工从数据库中筛选或者使用工具检索可能需要的信息，手动的粘贴到 prompt 中。但是随着问题一旦变得复杂，手动的粘贴信息到 prompt 中，就会非常麻烦。虽然许多 LLM 平台引入了 function call 功能。这一机制允许模型在需要时调用预定义的函数来获取数据或执行操作。但是 function call 有一个很明显的局限性，那就是不同 LLM 平台的 function call API 实现差异较大。开发者在切换模型时需要重写代码，适配成本很高。下面是一些 LLM 平台 function call API 的实现示例：</p><p>OpenAI:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;index&#34;</span><span class=p>:</span> <span class=mi>0</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;message&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;assistant&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;content&#34;</span><span class=p>:</span> <span class=kc>null</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;tool_calls&#34;</span><span class=p>:</span> <span class=p>[</span>
+</span></span><span class=line><span class=cl>      <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nt>&#34;name&#34;</span><span class=p>:</span> <span class=s2>&#34;get_current_stock_price&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=nt>&#34;arguments&#34;</span><span class=p>:</span> <span class=s2>&#34;{\n  \&#34;company\&#34;: \&#34;Apple Inc.\&#34;,\n  \&#34;format\&#34;: \&#34;USD\&#34;\n}&#34;</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>]</span>
+</span></span><span class=line><span class=cl>  <span class=p>},</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;finish_reason&#34;</span><span class=p>:</span> <span class=s2>&#34;tool_calls&#34;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>Claude:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;assistant&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;content&#34;</span><span class=p>:</span> <span class=p>[</span>
+</span></span><span class=line><span class=cl>    <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=nt>&#34;type&#34;</span><span class=p>:</span> <span class=s2>&#34;text&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>      <span class=nt>&#34;text&#34;</span><span class=p>:</span> <span class=s2>&#34;&lt;thinking&gt;To answer this question, I will: …&lt;/thinking&gt;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=p>},</span>
+</span></span><span class=line><span class=cl>    <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=nt>&#34;type&#34;</span><span class=p>:</span> <span class=s2>&#34;tool_use&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>      <span class=nt>&#34;id&#34;</span><span class=p>:</span> <span class=s2>&#34;toolu_01A09q90qw90lq917835lq9&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>      <span class=nt>&#34;name&#34;</span><span class=p>:</span> <span class=s2>&#34;get_current_stock_price&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>      <span class=nt>&#34;input&#34;</span><span class=p>:</span> <span class=p>{</span><span class=nt>&#34;company&#34;</span><span class=p>:</span> <span class=s2>&#34;Apple Inc.&#34;</span><span class=p>,</span> <span class=nt>&#34;format&#34;</span><span class=p>:</span> <span class=s2>&#34;USD&#34;</span><span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>]</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>Gemini:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;functionCall&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;name&#34;</span><span class=p>:</span> <span class=s2>&#34;get_current_stock_price&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;args&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nt>&#34;company&#34;</span><span class=p>:</span> <span class=s2>&#34;Apple Inc.&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=nt>&#34;format&#34;</span><span class=p>:</span> <span class=s2>&#34;USD&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>从上面的示例也可以看到，各家 LLM 平台的 function call API有各自的调用格式。而 MCP 的出现统一了 AI 模型连接外部不同数据源和工具的标准，这也让各种各样的服务都开发了自己的 MCP 服务接口，进一步促进了 MCP 生态的开发和推广。</p><h2 id=mcp架构 class=heading-element><span>MCP架构</span>
+<a href=#mcp%e6%9e%b6%e6%9e%84 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><h3 id=核心架构解析 class=heading-element><span>核心架构解析</span>
+<a href=#%e6%a0%b8%e5%bf%83%e6%9e%b6%e6%9e%84%e8%a7%a3%e6%9e%90 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>这里先引入官方的架构图：<figure><img src=https://images.benelin.site/posts/mcp-architecture2.jpg width=650 height=650></figure>MCP 由三个核心组件构成：Host、Client 和 Server。让我们通过一个实际场景来理解这些组件如何协同工作：假设你正在使用vscode的cline插件询问：&ldquo;我的main.go文件里面实现了什么功能？&rdquo;</p><ol><li>Host：cline 作为 Host，负责接收你的提问并与你在cline中配置的模型交互。</li><li>Client：当大模型分析问题后发现需要读取你的main.go文件，Host 中内置的 MCP Client 会被激活。这个 Client 负责与适当的 MCP Server 建立连接。</li><li>Server：MCP Server 是一个特殊的应用程序，它负责与外部数据源或工具进行交互。在本例中，会使用 filesystem 这个 MCP Server 来读取 main.go 文件。</li></ol><p>整个流程大致如下图所示：</p><pre class=mermaid>graph LR
+    subgraph 应用程序宿主进程
+        H[主机]
+        C1[客户端 1]
+        C2[客户端 2]
+        C3[客户端 3]
+        H --> C1
+        H --> C2
+        H --> C3
+    end
+
+    subgraph 本地机器
+        S1[服务器 1<br>文件和 Git]
+        S2[服务器 2<br>数据库]
+        R1[(本地<br>资源 A)]
+        R2[(本地<br>资源 B)]
+
+        C1 --> S1
+        C2 --> S2
+        S1 <--> R1
+        S2 <--> R2
+    end
+
+    subgraph 互联网
+        S3[服务器 3<br>外部 API]
+        R3[(远程<br>资源 C)]
+
+        C3 --> S3
+        S3 <--> R3
+    end</pre><template>graph LR
+subgraph 应用程序宿主进程
+H[主机]
+C1[客户端 1]
+C2[客户端 2]
+C3[客户端 3]
+H --> C1
+H --> C2
+H --> C3
+end
+subgraph 本地机器
+S1[服务器 1<br>文件和 Git]
+S2[服务器 2<br>数据库]
+R1[(本地<br>资源 A)]
+R2[(本地<br>资源 B)]
+C1 --> S1
+C2 --> S2
+S1 <--> R1
+S2 <--> R2
+end
+subgraph 互联网
+S3[服务器 3<br>外部 API]
+R3[(远程<br>资源 C)]
+C3 --> S3
+S3 <--> R3
+end</template><p>也就是说在MCP的工程实践中，Host和Client是集成在一起的，至于什么时候需要用到MCP Server，用哪一个MCP Server，这由大模型决定。而MCP server的功能由开发者根据需要去做不同的实现。</p><p>这种架构设计使得大模型可以在不同场景下灵活调用各种工具和数据源，而开发者只需专注于开发对应的 MCP Server，无需关心 Host 和 Client 的实现细节。</p><h3 id=组件详情 class=heading-element><span>组件详情</span>
+<a href=#%e7%bb%84%e4%bb%b6%e8%af%a6%e6%83%85 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p><strong>主机</strong></p><ul><li>创建和管理多个客户端实例</li><li>控制客户端连接权限和生命周期</li><li>执行安全策略和同意要求</li><li>处理用户授权决策</li><li>协调 AI/LLM 集成和采样</li><li>管理跨客户端的上下文聚合</li></ul><p><strong>客户端</strong></p><p>每个客户端由宿主创建，并维护一个隔离的服务器连接：</p><ul><li>为每个服务器建立一个有状态会话</li><li>处理协议协商和能力交换</li><li>双向路由协议消息</li><li>管理订阅和通知</li><li>维护服务器之间的安全边界</li></ul><p>一个宿主应用程序创建和管理多个客户端，每个客户端与特定的服务器有 1:1 的关系。</p><p><strong>服务器</strong></p><p>服务器提供专门的上下文和功能:</p><ul><li>通过 MCP 原语公开资源、工具和提示</li><li>独立运行，具有专注的职责</li><li>通过客户端接口请求采样</li><li>必须尊重安全约束</li><li>可以是本地进程或远程服务</li></ul><h2 id=协议基础 class=heading-element><span>协议基础</span>
+<a href=#%e5%8d%8f%e8%ae%ae%e5%9f%ba%e7%a1%80 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>MCP 中的所有消息必须遵循 <a href=https://wiki.geekdream.com/Specification/json-rpc_2.0.html target=_blank rel="external nofollow noopener noreferrer">JSON-RPC 2.0</a> 规范。协议定义了三种类型的消息：请求、响应和通知。</p><h3 id=请求 class=heading-element><span>请求</span>
+<a href=#%e8%af%b7%e6%b1%82 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>双向消息，可以从客户端发送到服务器，也可以反向发送</p><ul><li>必须包含字符串或整数类型的 ID</li><li>ID 不能为 null</li><li>在同一会话中，请求方不能重复使用相同的 ID</li><li>可以包含可选的参数对象</li></ul><p>请求示例：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;jsonrpc&#34;</span><span class=p>:</span> <span class=s2>&#34;2.0&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;id&#34;</span><span class=p>:</span> <span class=s2>&#34;string | number&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;method&#34;</span><span class=p>:</span> <span class=s2>&#34;string&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;param?&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;key&#34;</span><span class=p>:</span> <span class=s2>&#34;value&#34;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><h3 id=响应 class=heading-element><span>响应</span>
+<a href=#%e5%93%8d%e5%ba%94 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>作为对请求的回复而发送。</p><ul><li>必须包含与对应请求相同的 ID</li><li>必须设置 result 或 error 其中之一，不能同时设置</li><li>错误码必须是整数</li><li>可以包含可选的结果数据</li></ul><p>响应示例：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;jsonrpc&#34;</span><span class=p>:</span> <span class=s2>&#34;2.0&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;id&#34;</span><span class=p>:</span> <span class=s2>&#34;string | number&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;result?&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;[key: string]&#34;</span><span class=p>:</span> <span class=s2>&#34;unknown&#34;</span>
+</span></span><span class=line><span class=cl>  <span class=p>},</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;error?&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;code&#34;</span><span class=p>:</span> <span class=s2>&#34;number&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;message&#34;</span><span class=p>:</span> <span class=s2>&#34;string&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;data?&#34;</span><span class=p>:</span> <span class=s2>&#34;unknown&#34;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><h3 id=通知 class=heading-element><span>通知</span>
+<a href=#%e9%80%9a%e7%9f%a5 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>不需要响应的单向消息，可以从客户端发送到服务器，也可以反向发送。</p><ul><li>不能包含 ID 字段</li><li>用于状态更新和事件通知</li><li>可以包含可选的参数对象</li><li>减少通信开销，支持异步操作</li></ul><p>通知示例：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;jsonrpc&#34;</span><span class=p>:</span> <span class=s2>&#34;2.0&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;method&#34;</span><span class=p>:</span> <span class=s2>&#34;string&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;params?&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;[key: string]&#34;</span><span class=p>:</span> <span class=s2>&#34;unknown&#34;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><h2 id=生命周期 class=heading-element><span>生命周期</span>
+<a href=#%e7%94%9f%e5%91%bd%e5%91%a8%e6%9c%9f class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>MCP 为客户端-服务器连接定义了严格的生命周期，确保正确的能力协商和状态管理。主要包含三个阶段：</p><ol><li>初始化：能力协商和协议版本协商</li><li>操作：通过协议正常交换信息</li><li>关闭：安全终止连接</li></ol><p>生命周期时序图：</p><pre class=mermaid>sequenceDiagram
+    participant Client
+    participant Server
+
+    Note over Client,Server: 初始化阶段
+    activate Client
+    Client->>+Server: 初始化请求
+    Server-->>Client: 初始化响应
+    Client--)Server: 已初始化通知
+
+    Note over Client,Server: 操作阶段
+    rect rgb(200, 220, 250)
+        note over Client,Server: 正常协议操作
+    end
+
+    Note over Client,Server: 关闭
+    Client--)Server: 断开连接
+    deactivate Server
+    Note over Client,Server: 连接已关闭</pre><template>sequenceDiagram
+participant Client
+participant Server
+Note over Client,Server: 初始化阶段
+activate Client
+Client->>+Server: 初始化请求
+Server-->>Client: 初始化响应
+Client--)Server: 已初始化通知
+Note over Client,Server: 操作阶段
+rect rgb(200, 220, 250)
+note over Client,Server: 正常协议操作
+end
+Note over Client,Server: 关闭
+Client--)Server: 断开连接
+deactivate Server
+Note over Client,Server: 连接已关闭</template><h3 id=初始化阶段 class=heading-element><span>初始化阶段</span>
+<a href=#%e5%88%9d%e5%a7%8b%e5%8c%96%e9%98%b6%e6%ae%b5 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>初始化阶段是客户端和服务器之间的第一次交互。在此阶段，双方：</p><ul><li>建立协议版本兼容性</li><li>交换和协商能力</li><li>共享实现细节</li></ul><p>其中的核心是版本协商和能力协商。</p><pre class=mermaid>sequenceDiagram
+    participant Host
+    participant Client
+    participant Server
+
+    Host->>+Client: 初始化客户端
+    Client->>+Server: 用能力初始化会话
+    Server-->>Client: 响应支持的能力
+
+    Note over Host,Server: 具有协商功能的活动会话
+
+    loop 客户端请求
+        Host->>Client: 用户或模型发起的操作
+        Client->>Server: 请求（工具/资源）
+        Server-->>Client: 响应
+        Client-->>Host: 更新UI或响应模型
+    end
+
+    loop 服务器请求
+        Server->>Client: 请求（采样）
+        Client->>Host: 转发到AI
+        Host-->>Client: AI响应
+        Client-->>Server: 响应
+    end
+
+    loop 通知
+        Server--)Client: 资源更新
+        Client--)Server: 状态变更
+    end
+
+    Host->>Client: 终止
+    Client->>-Server: 结束会话
+    deactivate Server</pre><template>sequenceDiagram
+participant Host
+participant Client
+participant Server
+Host->>+Client: 初始化客户端
+Client->>+Server: 用能力初始化会话
+Server-->>Client: 响应支持的能力
+Note over Host,Server: 具有协商功能的活动会话
+loop 客户端请求
+Host->>Client: 用户或模型发起的操作
+Client->>Server: 请求（工具/资源）
+Server-->>Client: 响应
+Client-->>Host: 更新UI或响应模型
+end
+loop 服务器请求
+Server->>Client: 请求（采样）
+Client->>Host: 转发到AI
+Host-->>Client: AI响应
+Client-->>Server: 响应
+end
+loop 通知
+Server--)Client: 资源更新
+Client--)Server: 状态变更
+end
+Host->>Client: 终止
+Client->>-Server: 结束会话
+deactivate Server</template><h3 id=操作阶段 class=heading-element><span>操作阶段</span>
+<a href=#%e6%93%8d%e4%bd%9c%e9%98%b6%e6%ae%b5 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>在操作阶段，客户端和服务器根据协商的能力交换消息。</p><ul><li>遵守协商的协议版本</li><li>仅使用成功协商的能力</li></ul><h3 id=关闭阶段 class=heading-element><span>关闭阶段</span>
+<a href=#%e5%85%b3%e9%97%ad%e9%98%b6%e6%ae%b5 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>在关闭阶段，连接被优雅地终止。</p><ul><li>客户端发送断开连接通知</li><li>服务器关闭连接</li><li>清理相关资源</li></ul><h2 id=传输机制 class=heading-element><span>传输机制</span>
+<a href=#%e4%bc%a0%e8%be%93%e6%9c%ba%e5%88%b6 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>MCP 目前定义了两种标准的客户端-服务器通信传输机制：stdio（标准输入输出）和基于 SSE 的 HTTP。客户端应尽可能支持 stdio。此外，客户端和服务器也可以以可插拔的方式实现自定义传输机制。</p><h3 id=标准输入输出stdio class=heading-element><span>标准输入输出（stdio）</span>
+<a href=#%e6%a0%87%e5%87%86%e8%be%93%e5%85%a5%e8%be%93%e5%87%bastdio class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>在 stdio 传输中：</p><ul><li>客户端将 MCP 服务器启动为子进程。</li><li>服务器在其标准输入（stdin）上接收 JSON-RPC 消息，并将响应写入其标准输出（stdout）。</li><li>消息由换行符分隔，并且不得包含嵌入的换行符。</li><li>服务器可以为日志记录目的向其标准错误（stderr）写入 UTF-8 字符串。客户端可以捕获、转发或忽略此日志记录。</li><li>服务器不得向其 stdout 写入任何不是有效 MCP 消息的内容。</li><li>客户端不得向服务器的 stdin 写入任何不是有效 MCP 消息的内容。</li></ul><pre class=mermaid>sequenceDiagram
+    participant Client
+    participant Server Process
+
+    Client->>+Server Process: 启动子进程
+    loop 消息交换
+        Client->>Server Process: 写入 stdin
+        Server Process->>Client: 写入 stdout
+        Server Process--)Client: 可选的 stderr 日志
+    end
+    Client->>Server Process: 关闭 stdin，终止子进程
+    deactivate Server Process</pre><template>sequenceDiagram
+participant Client
+participant Server Process
+Client->>+Server Process: 启动子进程
+loop 消息交换
+Client->>Server Process: 写入 stdin
+Server Process->>Client: 写入 stdout
+Server Process--)Client: 可选的 stderr 日志
+end
+Client->>Server Process: 关闭 stdin，终止子进程
+deactivate Server Process</template><h3 id=基于-sse-的-http class=heading-element><span>基于 SSE 的 HTTP</span>
+<a href=#%e5%9f%ba%e4%ba%8e-sse-%e7%9a%84-http class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>在 SSE 传输中，服务器作为独立进程运行，可以处理多个客户端连接。服务器必须提供两个端点：</p><ol><li>一个 SSE 端点，供客户端建立连接并接收来自服务器的消息</li><li>一个常规的 HTTP POST 端点，供客户端向服务器发送消息</li></ol><p>当客户端连接时，服务器必须发送一个包含 URI 的 endpoint 事件，客户端用于发送消息。所有后续客户端消息必须作为 HTTP POST 请求发送到此端点。服务器消息作为 SSE message 事件发送，消息内容在事件数据中编码为 JSON。</p><pre class=mermaid>sequenceDiagram
+    participant Client
+    participant Server
+
+    Client->>Server: 打开 SSE 连接
+    Server->>Client: endpoint 事件
+    loop 消息交换
+        Client->>Server: HTTP POST 消息
+        Server->>Client: SSE message 事件
+    end
+    Client->>Server: 关闭 SSE 连接</pre><template>sequenceDiagram
+participant Client
+participant Server
+Client->>Server: 打开 SSE 连接
+Server->>Client: endpoint 事件
+loop 消息交换
+Client->>Server: HTTP POST 消息
+Server->>Client: SSE message 事件
+end
+Client->>Server: 关闭 SSE 连接</template><h3 id=自定义传输 class=heading-element><span>自定义传输</span>
+<a href=#%e8%87%aa%e5%ae%9a%e4%b9%89%e4%bc%a0%e8%be%93 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>客户端和服务器可以以可插拔的方式实现自定义传输机制。该协议与传输无关，可以在任何支持双向消息交换的通信通道上实现。选择支持自定义传输的实施者必须确保他们保留 MCP 定义的 JSON-RPC 消息格式和生命周期要求。自定义传输应该记录其特定的连接建立和消息交换模式，以帮助互操作性。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span title="更新于 2025-04-16 11:00:07">更新于 2025-04-16&nbsp;</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 X" data-sharer=twitter data-url=https://beneliu.github.io/posts/ai/130309a/ data-title=MCP架构和协议解析 data-hashtags=MCP,AI><i class="fa-brands fa-x-twitter fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 Facebook" data-sharer=facebook data-url=https://beneliu.github.io/posts/ai/130309a/ data-hashtag=MCP><i class="fa-brands fa-facebook-square fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://beneliu.github.io/posts/ai/130309a/ data-title=MCP架构和协议解析><i class="fa-brands fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fa-solid fa-tags fa-fw me-1" aria-hidden=true></i><a href=/tags/mcp/ class=post-tag title="标签 - MCP">MCP</a><a href=/tags/ai/ class=post-tag title="标签 - AI">AI</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/posts/devops/338be2a/ class=post-nav-item rel=prev title=Nacos集群搭建><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i>Nacos集群搭建</a><a href=/posts/ai/f6ee174/ class=post-nav-item rel=next title=MCP和LLM的调用细节>MCP和LLM的调用细节<i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div class=post-reward><div class=comment>Buy me a coffee</div><input type=checkbox class=reward-input name=reward id=fi-reward hidden>
+<label class=reward-button for=fi-reward><i class="fa-solid fa-qrcode fa-fw" aria-hidden=true></i>赞赏</label><div class=reward-ways data-mode=static><div><img src=/images/alipay.jpg alt="beneliu 支付宝"><span>支付宝</span></div><div><img src=/images/wechatpay.jpg alt="beneliu 微信"><span>微信</span></div></div></div><div id=comments><div id=giscus class=comment><script src=https://giscus.app/client.js data-repo=beneliu/beneliu.github.io data-repo-id=R_kgDOOQGXgQ data-category=Announcements data-category-id=DIC_kwDOOQGXgc4CovKm data-mapping=pathname data-strict=0 data-theme=preferred_color_scheme data-reactions-enabled=1 data-emit-metadata=0 data-input-position=top data-lang=zh-CN data-loading=lazy crossorigin=anonymous async defer></script></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://giscus.app/ rel="external nofollow noopener noreferrer">giscus</a>.</noscript></div></article><aside class=toc id=toc-auto aria-label=目录><h2 class=toc-title>目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden=true></i></h2><div class="toc-content always-active" id=toc-content-auto></div></aside></main><footer class=footer><div class=footer-container><div class="footer-line powered order-last">由 <a href=https://gohugo.io/ target=_blank rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class=hugo-icon src=/images/hugo.min.svg alt="Hugo logo"> Hugo</a> 强力驱动 | 主题 - <a href=https://github.com/hugo-fixit/FixIt target=_blank rel=external title="FixIt v0.3.17-8212d6fd"><img class=fixit-icon src=/images/fixit.min.svg alt="FixIt logo"> FixIt</a></div><div class="footer-line copyright order-first" itemscope itemtype=http://schema.org/CreativeWork><i class="fa-regular fa-copyright fa-fw" aria-hidden=true></i>
+<span itemprop=copyrightYear>2025</span><span class=author itemprop=copyrightHolder>
+<a href=https://github.com/beneliu target=_blank rel="external nofollow noopener noreferrer">beneliu</a></span></div><div class="footer-line statistics"><span class=site-time title=网站运行中……><i class="fa-solid fa-heartbeat fa-fw animate-icon fa-fw animate-icon" aria-hidden=true></i><span class="ms-1 d-none">Runing</span><span class="run-times ms-1">网站运行中……</span></span></div><div class="footer-line visitor"><span id=busuanzi_container_site_uv title=总访客数><i class="fa-regular fa-user fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_site_uv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span><span id=busuanzi_container_site_pv class=footer-divider title=总访问量><i class="fa-regular fa-eye fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_site_pv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span></div></div></footer></div><div class=widgets><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role=button aria-label=回到顶部><i class="fa-solid fa-arrow-up fa-fw" aria-hidden=true></i><span class=variant-numeric>0%</span></div><div class="fixed-button view-comments d-none" role=button aria-label=查看评论><i class="fa-solid fa-comment fa-fw" aria-hidden=true></i></div></div><a href=https://github.com/beneliu title="Visit Me on GitHub" target=_blank rel="external nofollow" class="github-corner left d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0 0 115 115h15l12 27L250 250V0z"/><path d="M128.3 109C113.8 99.7 119 89.6 119 89.6 122 82.7 120.5 78.6 120.5 78.6 119.2 72 123.4 76.3 123.4 76.3 127.3 80.9 125.5 87.3 125.5 87.3 122.9 97.6 130.6 101.9 134.4 103.2" fill="currentcolor" style="transform-origin:130px 106px" class="octo-arm"/><path d="M115 115C114.9 115.1 118.7 116.5 119.8 115.4l13.9-13.8C136.9 99.2 139.9 98.4 142.2 98.6 133.8 88 127.5 74.4 143.8 58 148.5 53.4 154 51.2 159.7 51 160.3 49.4 163.2 43.6 171.4 40.1 171.4 40.1 176.1 42.5 178.8 56.2 183.1 58.6 187.2 61.8 190.9 65.4 194.5 69 197.7 73.2 200.1 77.6 213.8 80.2 216.3 84.9 216.3 84.9 212.7 93.1 206.9 96 205.4 96.6 205.1 102.4 203 107.8 198.3 112.5 181.9 128.9 168.3 122.5 157.7 114.1 157.9 116.9 156.7 120.9 152.7 124.9L141 136.5C139.8 137.7 141.6 141.9 141.8 141.8z" fill="currentcolor" class="octo-body"/></svg></a><div id=mask></div><div class=reading-progress-bar style=left:0;top:0></div><noscript><div class=noscript-warning>该网站在启用 JavaScript 的情况下效果最佳。</div></noscript></div><script type=module>
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.3.0/dist/mermaid.esm.min.mjs';
+    
+    
+    
+    window.mermaid = mermaid;
+  </script><link rel=stylesheet href=/lib/cookieconsent/cookieconsent.min.css><script src=/lib/autocomplete/autocomplete.min.js defer></script><script src=/lib/fuse/fuse.min.js defer></script><script src=/lib/sharer/sharer.min.js async defer></script><script src=/lib/cookieconsent/cookieconsent.min.js defer></script><script src=https://vercount.one/js async defer></script><script>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:10},comment:{enable:!0,expired:!1,giscus:{darkTheme:"dark",lightTheme:"light",origin:"https://giscus.app"}},cookieconsent:{content:{dismiss:"同意",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验。"},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},mermaid:{themes:["default","dark"]},search:{distance:100,findAllMatches:!1,fuseIndexURL:"/search.json",highlightTag:"em",ignoreFieldNorm:!1,ignoreLocation:!1,isCaseSensitive:!1,location:0,maxResultLength:10,minMatchCharLength:2,noResultsFound:"没有找到结果",snippetLength:30,threshold:.3,type:"fuse",useExtendedSearch:!1},siteTime:"2025-04-02T15:30:00+08:00",version:"v0.3.17-8212d6fd"}</script><script src=/js/theme.min.js defer></script><script src=/js/custom.min.js defer></script></body></html>

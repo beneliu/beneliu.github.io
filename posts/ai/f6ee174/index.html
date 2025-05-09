@@ -1,0 +1,377 @@
+<!doctype html><html itemscope itemtype=http://schema.org/WebPage lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=2"><meta name=robots content="noodp"><title>MCP和LLM的调用细节 - 字节飞鸿</title><meta name=author content="beneliu">
+<meta name=description content=' 内容简介 介绍MCP和LLM之间的协作细节，讲解LLM是如何利用MCP服务来扩展自己的边际能力的。 在用go做了几个MCP的Demo服务后，又对MCP的架构和协议细节进行了深入地学习，对MCP的理解深刻了很多。但是在开发过程中还是有两个关键的问题未得到解答：
+cline插件、我的MCP服务、大模型这三者之间的调用流程是怎样的？ 大模型是在什么时候确定使用哪些MCP服务的呢？ 这里需要注意下，我使用的是vscode的cline插件，所以这里拿cline举例，但是其实客户端也可以是cursor、cherry studio等其他客户端。
+在 MCP 官网为我们提供了一个解释：
+客户端将你的问题发送给 Claude Claude 分析可用的工具，并决定使用哪一个或多个 客户端通过 MCP Server 执行所选的工具 工具的执行结果被送回给 Claude Claude 结合执行结果生成回答 回应最终展示给用户 从以上的解释可以看出，大模型和MCP服务之间的调用过程是分两步完成的：
+由 LLM 确定使用哪些 MCP Server 执行对应的 MCP Server 并对执行结果进行重新处理 所以 MCP Server 是由大模型主动选择并调用的。但是大模型具体又是如何确定该使用哪些工具呢？从 MCP 官方提供的 pyhton client example 中可以得到答案：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 async def start(self) -> None: """Main chat session handler.""" try: for server in self.servers: try: await server.initialize() except Exception as e: logging.error(f"Failed to initialize server: {e}") await self.cleanup_servers() return all_tools = [] for server in self.servers: tools = await server.list_tools() all_tools.extend(tools) tools_description = "\n".join([tool.format_for_llm() for tool in all_tools]) system_message = ( "You are a helpful assistant with access to these tools:\n\n" f"{tools_description}\n" "Choose the appropriate tool based on the user&#39;s question. " "If no tool is needed, reply directly.\n\n" "IMPORTANT: When you need to use a tool, you must ONLY respond with " "the exact JSON object format below, nothing else:\n" "{\n" &#39; "tool": "tool-name",\n&#39; &#39; "arguments": {\n&#39; &#39; "argument-name": "value"\n&#39; " }\n" "}\n\n" "After receiving a tool&#39;s response:\n" "1. Transform the raw data into a natural, conversational response\n" "2. Keep responses concise but informative\n" "3. Focus on the most relevant information\n" "4. Use appropriate context from the user&#39;s question\n" "5. Avoid simply repeating the raw data\n\n" "Please use only the tools that are explicitly defined above." ) messages = [{"role": "system", "content": system_message}] while True: try: user_input = input("You: ").strip().lower() if user_input in ["quit", "exit"]: logging.info("\nExiting...") break messages.append({"role": "user", "content": user_input}) llm_response = self.llm_client.get_response(messages) logging.info("\nAssistant: %s", llm_response) result = await self.process_llm_response(llm_response) if result != llm_response: messages.append({"role": "assistant", "content": llm_response}) messages.append({"role": "system", "content": result}) final_response = self.llm_client.get_response(messages) logging.info("\nFinal response: %s", final_response) messages.append( {"role": "assistant", "content": final_response} ) else: messages.append({"role": "assistant", "content": llm_response}) except KeyboardInterrupt: logging.info("\nExiting...") break finally: await self.cleanup_servers() ... # 省略其他代码 从代码可以看出，在和大模型进行交互前，将所有工具的结构化描述放到tools_description中，再添加到system_message中，然后把system_message和用户消息一起发送给模型。当模型分析用户请求后，它会决定是否需要调用工具：
+'><meta name=keywords content='MCP,AI'><meta itemprop=name content="MCP和LLM的调用细节"><meta itemprop=description content='内容简介 介绍MCP和LLM之间的协作细节，讲解LLM是如何利用MCP服务来扩展自己的边际能力的。 在用go做了几个MCP的Demo服务后，又对MCP的架构和协议细节进行了深入地学习，对MCP的理解深刻了很多。但是在开发过程中还是有两个关键的问题未得到解答：
+cline插件、我的MCP服务、大模型这三者之间的调用流程是怎样的？ 大模型是在什么时候确定使用哪些MCP服务的呢？ 这里需要注意下，我使用的是vscode的cline插件，所以这里拿cline举例，但是其实客户端也可以是cursor、cherry studio等其他客户端。
+在 MCP 官网为我们提供了一个解释：
+客户端将你的问题发送给 Claude Claude 分析可用的工具，并决定使用哪一个或多个 客户端通过 MCP Server 执行所选的工具 工具的执行结果被送回给 Claude Claude 结合执行结果生成回答 回应最终展示给用户 从以上的解释可以看出，大模型和MCP服务之间的调用过程是分两步完成的：
+由 LLM 确定使用哪些 MCP Server 执行对应的 MCP Server 并对执行结果进行重新处理 所以 MCP Server 是由大模型主动选择并调用的。但是大模型具体又是如何确定该使用哪些工具呢？从 MCP 官方提供的 pyhton client example 中可以得到答案：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 async def start(self) -> None: """Main chat session handler.""" try: for server in self.servers: try: await server.initialize() except Exception as e: logging.error(f"Failed to initialize server: {e}") await self.cleanup_servers() return all_tools = [] for server in self.servers: tools = await server.list_tools() all_tools.extend(tools) tools_description = "\n".join([tool.format_for_llm() for tool in all_tools]) system_message = ( "You are a helpful assistant with access to these tools:\n\n" f"{tools_description}\n" "Choose the appropriate tool based on the user&#39;s question. " "If no tool is needed, reply directly.\n\n" "IMPORTANT: When you need to use a tool, you must ONLY respond with " "the exact JSON object format below, nothing else:\n" "{\n" &#39; "tool": "tool-name",\n&#39; &#39; "arguments": {\n&#39; &#39; "argument-name": "value"\n&#39; " }\n" "}\n\n" "After receiving a tool&#39;s response:\n" "1. Transform the raw data into a natural, conversational response\n" "2. Keep responses concise but informative\n" "3. Focus on the most relevant information\n" "4. Use appropriate context from the user&#39;s question\n" "5. Avoid simply repeating the raw data\n\n" "Please use only the tools that are explicitly defined above." ) messages = [{"role": "system", "content": system_message}] while True: try: user_input = input("You: ").strip().lower() if user_input in ["quit", "exit"]: logging.info("\nExiting...") break messages.append({"role": "user", "content": user_input}) llm_response = self.llm_client.get_response(messages) logging.info("\nAssistant: %s", llm_response) result = await self.process_llm_response(llm_response) if result != llm_response: messages.append({"role": "assistant", "content": llm_response}) messages.append({"role": "system", "content": result}) final_response = self.llm_client.get_response(messages) logging.info("\nFinal response: %s", final_response) messages.append( {"role": "assistant", "content": final_response} ) else: messages.append({"role": "assistant", "content": llm_response}) except KeyboardInterrupt: logging.info("\nExiting...") break finally: await self.cleanup_servers() ... # 省略其他代码 从代码可以看出，在和大模型进行交互前，将所有工具的结构化描述放到tools_description中，再添加到system_message中，然后把system_message和用户消息一起发送给模型。当模型分析用户请求后，它会决定是否需要调用工具：'><meta itemprop=datePublished content="2025-04-18T13:27:28+08:00"><meta itemprop=dateModified content="2025-04-18T13:27:28+08:00"><meta itemprop=wordCount content="747"><meta itemprop=keywords content="MCP,AI"><meta property="og:url" content="https://beneliu.github.io/posts/ai/f6ee174/"><meta property="og:site_name" content="字节飞鸿"><meta property="og:title" content="MCP和LLM的调用细节"><meta property="og:description" content='内容简介 介绍MCP和LLM之间的协作细节，讲解LLM是如何利用MCP服务来扩展自己的边际能力的。 在用go做了几个MCP的Demo服务后，又对MCP的架构和协议细节进行了深入地学习，对MCP的理解深刻了很多。但是在开发过程中还是有两个关键的问题未得到解答：
+cline插件、我的MCP服务、大模型这三者之间的调用流程是怎样的？ 大模型是在什么时候确定使用哪些MCP服务的呢？ 这里需要注意下，我使用的是vscode的cline插件，所以这里拿cline举例，但是其实客户端也可以是cursor、cherry studio等其他客户端。
+在 MCP 官网为我们提供了一个解释：
+客户端将你的问题发送给 Claude Claude 分析可用的工具，并决定使用哪一个或多个 客户端通过 MCP Server 执行所选的工具 工具的执行结果被送回给 Claude Claude 结合执行结果生成回答 回应最终展示给用户 从以上的解释可以看出，大模型和MCP服务之间的调用过程是分两步完成的：
+由 LLM 确定使用哪些 MCP Server 执行对应的 MCP Server 并对执行结果进行重新处理 所以 MCP Server 是由大模型主动选择并调用的。但是大模型具体又是如何确定该使用哪些工具呢？从 MCP 官方提供的 pyhton client example 中可以得到答案：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 async def start(self) -> None: """Main chat session handler.""" try: for server in self.servers: try: await server.initialize() except Exception as e: logging.error(f"Failed to initialize server: {e}") await self.cleanup_servers() return all_tools = [] for server in self.servers: tools = await server.list_tools() all_tools.extend(tools) tools_description = "\n".join([tool.format_for_llm() for tool in all_tools]) system_message = ( "You are a helpful assistant with access to these tools:\n\n" f"{tools_description}\n" "Choose the appropriate tool based on the user&#39;s question. " "If no tool is needed, reply directly.\n\n" "IMPORTANT: When you need to use a tool, you must ONLY respond with " "the exact JSON object format below, nothing else:\n" "{\n" &#39; "tool": "tool-name",\n&#39; &#39; "arguments": {\n&#39; &#39; "argument-name": "value"\n&#39; " }\n" "}\n\n" "After receiving a tool&#39;s response:\n" "1. Transform the raw data into a natural, conversational response\n" "2. Keep responses concise but informative\n" "3. Focus on the most relevant information\n" "4. Use appropriate context from the user&#39;s question\n" "5. Avoid simply repeating the raw data\n\n" "Please use only the tools that are explicitly defined above." ) messages = [{"role": "system", "content": system_message}] while True: try: user_input = input("You: ").strip().lower() if user_input in ["quit", "exit"]: logging.info("\nExiting...") break messages.append({"role": "user", "content": user_input}) llm_response = self.llm_client.get_response(messages) logging.info("\nAssistant: %s", llm_response) result = await self.process_llm_response(llm_response) if result != llm_response: messages.append({"role": "assistant", "content": llm_response}) messages.append({"role": "system", "content": result}) final_response = self.llm_client.get_response(messages) logging.info("\nFinal response: %s", final_response) messages.append( {"role": "assistant", "content": final_response} ) else: messages.append({"role": "assistant", "content": llm_response}) except KeyboardInterrupt: logging.info("\nExiting...") break finally: await self.cleanup_servers() ... # 省略其他代码 从代码可以看出，在和大模型进行交互前，将所有工具的结构化描述放到tools_description中，再添加到system_message中，然后把system_message和用户消息一起发送给模型。当模型分析用户请求后，它会决定是否需要调用工具：'><meta property="og:locale" content="zh_cn"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2025-04-18T13:27:28+08:00"><meta property="article:modified_time" content="2025-04-18T13:27:28+08:00"><meta property="article:tag" content="MCP"><meta property="article:tag" content="AI"><meta name=twitter:card content="summary"><meta name=twitter:title content="MCP和LLM的调用细节"><meta name=twitter:description content='内容简介 介绍MCP和LLM之间的协作细节，讲解LLM是如何利用MCP服务来扩展自己的边际能力的。 在用go做了几个MCP的Demo服务后，又对MCP的架构和协议细节进行了深入地学习，对MCP的理解深刻了很多。但是在开发过程中还是有两个关键的问题未得到解答：
+cline插件、我的MCP服务、大模型这三者之间的调用流程是怎样的？ 大模型是在什么时候确定使用哪些MCP服务的呢？ 这里需要注意下，我使用的是vscode的cline插件，所以这里拿cline举例，但是其实客户端也可以是cursor、cherry studio等其他客户端。
+在 MCP 官网为我们提供了一个解释：
+客户端将你的问题发送给 Claude Claude 分析可用的工具，并决定使用哪一个或多个 客户端通过 MCP Server 执行所选的工具 工具的执行结果被送回给 Claude Claude 结合执行结果生成回答 回应最终展示给用户 从以上的解释可以看出，大模型和MCP服务之间的调用过程是分两步完成的：
+由 LLM 确定使用哪些 MCP Server 执行对应的 MCP Server 并对执行结果进行重新处理 所以 MCP Server 是由大模型主动选择并调用的。但是大模型具体又是如何确定该使用哪些工具呢？从 MCP 官方提供的 pyhton client example 中可以得到答案：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 async def start(self) -> None: """Main chat session handler.""" try: for server in self.servers: try: await server.initialize() except Exception as e: logging.error(f"Failed to initialize server: {e}") await self.cleanup_servers() return all_tools = [] for server in self.servers: tools = await server.list_tools() all_tools.extend(tools) tools_description = "\n".join([tool.format_for_llm() for tool in all_tools]) system_message = ( "You are a helpful assistant with access to these tools:\n\n" f"{tools_description}\n" "Choose the appropriate tool based on the user&#39;s question. " "If no tool is needed, reply directly.\n\n" "IMPORTANT: When you need to use a tool, you must ONLY respond with " "the exact JSON object format below, nothing else:\n" "{\n" &#39; "tool": "tool-name",\n&#39; &#39; "arguments": {\n&#39; &#39; "argument-name": "value"\n&#39; " }\n" "}\n\n" "After receiving a tool&#39;s response:\n" "1. Transform the raw data into a natural, conversational response\n" "2. Keep responses concise but informative\n" "3. Focus on the most relevant information\n" "4. Use appropriate context from the user&#39;s question\n" "5. Avoid simply repeating the raw data\n\n" "Please use only the tools that are explicitly defined above." ) messages = [{"role": "system", "content": system_message}] while True: try: user_input = input("You: ").strip().lower() if user_input in ["quit", "exit"]: logging.info("\nExiting...") break messages.append({"role": "user", "content": user_input}) llm_response = self.llm_client.get_response(messages) logging.info("\nAssistant: %s", llm_response) result = await self.process_llm_response(llm_response) if result != llm_response: messages.append({"role": "assistant", "content": llm_response}) messages.append({"role": "system", "content": result}) final_response = self.llm_client.get_response(messages) logging.info("\nFinal response: %s", final_response) messages.append( {"role": "assistant", "content": final_response} ) else: messages.append({"role": "assistant", "content": llm_response}) except KeyboardInterrupt: logging.info("\nExiting...") break finally: await self.cleanup_servers() ... # 省略其他代码 从代码可以看出，在和大模型进行交互前，将所有工具的结构化描述放到tools_description中，再添加到system_message中，然后把system_message和用户消息一起发送给模型。当模型分析用户请求后，它会决定是否需要调用工具：'><meta name=application-name content="FixIt"><meta name=apple-mobile-web-app-title content="FixIt"><meta name=theme-color data-light=#f8f8f8 data-dark=#252627 content="#f8f8f8"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=canonical type=text/html href=https://beneliu.github.io/posts/ai/f6ee174/ title="MCP和LLM的调用细节 - 字节飞鸿"><link rel=prev type=text/html href=https://beneliu.github.io/posts/ai/130309a/ title=MCP架构和协议解析><link rel=alternate type=text/markdown href=https://beneliu.github.io/posts/ai/f6ee174/index.md title="MCP和LLM的调用细节 - 字节飞鸿"><link rel=stylesheet href=/css/style.min.css><link rel=preload href=/lib/fontawesome-free/all.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=/lib/fontawesome-free/all.min.css></noscript><link rel=preload href=/lib/animate/animate.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=/lib/animate/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"MCP和LLM的调用细节","inLanguage":"zh-cn","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/beneliu.github.io\/posts\/ai\/f6ee174\/"},"genre":"posts","keywords":"MCP, AI","wordcount":747,"url":"https:\/\/beneliu.github.io\/posts\/ai\/f6ee174\/","datePublished":"2025-04-18T13:27:28+08:00","dateModified":"2025-04-18T13:27:28+08:00","publisher":{"@type":"Organization","name":""},"author":{"@type":"Person","name":"beneliu"},"description":""}</script><script src=/js/head/color-scheme.min.js></script></head><body data-header-desktop=sticky data-header-mobile=auto><div class=wrapper data-page-style=normal><header class="desktop animate__faster" id=header-desktop><div class=header-wrapper data-github-corner=left><div class=header-title><a href=/ title=字节飞鸿><img class=logo src=/images/avatar.png alt=字节飞鸿 height=32 width=32><span class=header-title-text>字节飞鸿</span></a><span class=header-subtitle></span></div><nav><ul class=menu><li class=menu-item><a class=menu-link href=/><i class="fa-solid fa-home fa-fw fa-sm" aria-hidden=true></i> 首页</a></li><li class="menu-item has-children"><a class=menu-link href=javascript:void(0);><i class="fa-solid fa-blog fa-fw fa-sm" aria-hidden=true></i> 博客</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden=true></i><ul class=sub-menu><li class=menu-item><a class=menu-link href=/posts/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 文章</a></li><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-th-list fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li></ul></li><li class=menu-item><a class=menu-link href=/friends><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/websites><i class="fa-solid fa-globe fa-fw fa-sm" aria-hidden=true></i> 站点</a></li><li class="menu-item has-children"><a class=menu-link href=javascript:void(0);><i class="fa-solid fa-heart-pulse fa-fw fa-sm" aria-hidden=true></i> 趣味</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden=true></i><ul class=sub-menu><li class=menu-item><a class=menu-link href=https://mikutap.nikunokoya.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-music fa-fw fa-sm" aria-hidden=true></i> Mikutap打碟</a></li><li class=menu-item><a class=menu-link href=https://www.skylinewebcams.com rel="noopener noreferrer" target=_blank><i class="fa-solid fa-video fa-fw fa-sm" aria-hidden=true></i> 全球实况</a></li><li class=menu-item><a class=menu-link href=https://newsnow.busiyi.world rel="noopener noreferrer" target=_blank><i class="fa-solid fa-newspaper fa-fw fa-sm" aria-hidden=true></i> 实时热点新闻</a></li><li class=menu-item><a class=menu-link href=https://dapanyuntu.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-chart-line fa-fw fa-sm" aria-hidden=true></i> 大盘实况</a></li></ul></li><li class="menu-item delimiter"></li><li class="menu-item search" id=search-desktop><input type=text placeholder=搜索文章标题或内容…… id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></li><li class="menu-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></li></ul></nav></div></header><header class="mobile animate__faster" id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=字节飞鸿><img class=logo src=/images/avatar.png alt=字节飞鸿 height=26 width=26><span class=header-title-text>字节飞鸿</span></a><span class=header-subtitle></span></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><nav><ul class=menu id=menu-mobile><li class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章标题或内容…… id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>取消</a></li><li class=menu-item><a class=menu-link href=/><i class="fa-solid fa-home fa-fw fa-sm" aria-hidden=true></i> 首页</a></li><li class=menu-item><span class=nested-item><a class=menu-link href=javascript:void(0);><i class="fa-solid fa-blog fa-fw fa-sm" aria-hidden=true></i> 博客</a>
+<i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden=true></i></span><ul class=sub-menu><li class=menu-item><a class=menu-link href=/posts/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 文章</a></li><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-th-list fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li></ul></li><li class=menu-item><a class=menu-link href=/friends><i class="fa-solid fa-user-group fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/websites><i class="fa-solid fa-globe fa-fw fa-sm" aria-hidden=true></i> 站点</a></li><li class=menu-item><span class=nested-item><a class=menu-link href=javascript:void(0);><i class="fa-solid fa-heart-pulse fa-fw fa-sm" aria-hidden=true></i> 趣味</a>
+<i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden=true></i></span><ul class=sub-menu><li class=menu-item><a class=menu-link href=https://mikutap.nikunokoya.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-music fa-fw fa-sm" aria-hidden=true></i> Mikutap打碟</a></li><li class=menu-item><a class=menu-link href=https://www.skylinewebcams.com rel="noopener noreferrer" target=_blank><i class="fa-solid fa-video fa-fw fa-sm" aria-hidden=true></i> 全球实况</a></li><li class=menu-item><a class=menu-link href=https://newsnow.busiyi.world rel="noopener noreferrer" target=_blank><i class="fa-solid fa-newspaper fa-fw fa-sm" aria-hidden=true></i> 实时热点新闻</a></li><li class=menu-item><a class=menu-link href=https://dapanyuntu.com/ rel="noopener noreferrer" target=_blank><i class="fa-solid fa-chart-line fa-fw fa-sm" aria-hidden=true></i> 大盘实况</a></li></ul></li><li class="menu-item menu-system"><span class="menu-system-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></span></li></ul></nav></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=container><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label=合集></aside><article class="page single"><div class=header><h1 class="single-title animate__animated animate__flipInX"><span>MCP和LLM的调用细节</span></h1></div><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://github.com/beneliu title=作者 target=_blank rel="external nofollow noopener noreferrer author" class=author><img class=avatar src=/images/avatar.png alt=beneliu height=16 width=16>&nbsp;beneliu</a></span><span class=post-included-in>&nbsp;收录于 <a href=/categories/ai%E5%BA%94%E7%94%A8/ class=post-category title="分类 - AI应用"><i class="fa-regular fa-folder fa-fw" aria-hidden=true></i> AI应用</a></span></div><div class=post-meta-line><span title="发布于 2025-04-18 13:27:28"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden=true></i><time datetime=2025-04-18>2025-04-18</time></span>&nbsp;<span title="747 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden=true></i>约 800 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden=true></i>预计阅读 4 分钟</span>&nbsp;<span id=busuanzi_container_page_pv class="busuanzi_visitors comment-visitors" data-flag-title=MCP和LLM的调用细节><i class="fa-regular fa-eye fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_page_pv>-</span>&nbsp;次阅读
+</span>&nbsp;</div></div><div class=content id=content><div class="details admonition info open"><div class="details-summary admonition-title"><i class="icon fa-fw fa-solid fa-circle-info" aria-hidden=true></i>内容简介<i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden=true></i></div><div class=details-content><div class=admonition-content>介绍MCP和LLM之间的协作细节，讲解LLM是如何利用MCP服务来扩展自己的边际能力的。</div></div></div><p>在用go做了几个MCP的Demo服务后，又对MCP的架构和协议细节进行了深入地学习，对MCP的理解深刻了很多。但是在开发过程中还是有两个关键的问题未得到解答：</p><ul><li>cline插件、我的MCP服务、大模型这三者之间的调用流程是怎样的？</li><li>大模型是在什么时候确定使用哪些MCP服务的呢？</li></ul><p>这里需要注意下，我使用的是vscode的cline插件，所以这里拿cline举例，但是其实客户端也可以是cursor、cherry studio等其他客户端。</p><p>在 MCP 官网为我们提供了一个<a href=https://modelcontextprotocol.io/quickstart/server#what%E2%80%99s-happening-under-the-hood target=_blank rel="external nofollow noopener noreferrer">解释</a>：</p><ol><li>客户端将你的问题发送给 Claude</li><li>Claude 分析可用的工具，并决定使用哪一个或多个</li><li>客户端通过 MCP Server 执行所选的工具</li><li>工具的执行结果被送回给 Claude</li><li>Claude 结合执行结果生成回答</li><li>回应最终展示给用户</li></ol><p>从以上的解释可以看出，大模型和MCP服务之间的调用过程是分两步完成的：</p><ol><li>由 LLM 确定使用哪些 MCP Server</li><li>执行对应的 MCP Server 并对执行结果进行重新处理</li></ol><p>所以 MCP Server 是由大模型主动选择并调用的。但是大模型具体又是如何确定该使用哪些工具呢？从 MCP 官方提供的 <a href=https://github.com/modelcontextprotocol/python-sdk/blob/main/examples/clients/simple-chatbot/mcp_simple_chatbot/main.py target=_blank rel="external nofollow noopener noreferrer">pyhton client example</a> 中可以得到答案：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span><span class=lnt>76
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl>    <span class=k>async</span> <span class=k>def</span> <span class=nf>start</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=s2>&#34;&#34;&#34;Main chat session handler.&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=k>for</span> <span class=n>server</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>servers</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=k>await</span> <span class=n>server</span><span class=o>.</span><span class=n>initialize</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>                <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=n>logging</span><span class=o>.</span><span class=n>error</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;Failed to initialize server: </span><span class=si>{</span><span class=n>e</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=k>await</span> <span class=bp>self</span><span class=o>.</span><span class=n>cleanup_servers</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>                    <span class=k>return</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=n>all_tools</span> <span class=o>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>            <span class=k>for</span> <span class=n>server</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>servers</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=n>tools</span> <span class=o>=</span> <span class=k>await</span> <span class=n>server</span><span class=o>.</span><span class=n>list_tools</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>                <span class=n>all_tools</span><span class=o>.</span><span class=n>extend</span><span class=p>(</span><span class=n>tools</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=n>tools_description</span> <span class=o>=</span> <span class=s2>&#34;</span><span class=se>\n</span><span class=s2>&#34;</span><span class=o>.</span><span class=n>join</span><span class=p>([</span><span class=n>tool</span><span class=o>.</span><span class=n>format_for_llm</span><span class=p>()</span> <span class=k>for</span> <span class=n>tool</span> <span class=ow>in</span> <span class=n>all_tools</span><span class=p>])</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=n>system_message</span> <span class=o>=</span> <span class=p>(</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;You are a helpful assistant with access to these tools:</span><span class=se>\n\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=sa>f</span><span class=s2>&#34;</span><span class=si>{</span><span class=n>tools_description</span><span class=si>}</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;Choose the appropriate tool based on the user&#39;s question. &#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;If no tool is needed, reply directly.</span><span class=se>\n\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;IMPORTANT: When you need to use a tool, you must ONLY respond with &#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;the exact JSON object format below, nothing else:</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;{</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s1>&#39;    &#34;tool&#34;: &#34;tool-name&#34;,</span><span class=se>\n</span><span class=s1>&#39;</span>
+</span></span><span class=line><span class=cl>                <span class=s1>&#39;    &#34;arguments&#34;: {</span><span class=se>\n</span><span class=s1>&#39;</span>
+</span></span><span class=line><span class=cl>                <span class=s1>&#39;        &#34;argument-name&#34;: &#34;value&#34;</span><span class=se>\n</span><span class=s1>&#39;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;    }</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;}</span><span class=se>\n\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;After receiving a tool&#39;s response:</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;1. Transform the raw data into a natural, conversational response</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;2. Keep responses concise but informative</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;3. Focus on the most relevant information</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;4. Use appropriate context from the user&#39;s question</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;5. Avoid simply repeating the raw data</span><span class=se>\n\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;Please use only the tools that are explicitly defined above.&#34;</span>
+</span></span><span class=line><span class=cl>            <span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=n>messages</span> <span class=o>=</span> <span class=p>[{</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;system&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>system_message</span><span class=p>}]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=k>while</span> <span class=kc>True</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=n>user_input</span> <span class=o>=</span> <span class=nb>input</span><span class=p>(</span><span class=s2>&#34;You: &#34;</span><span class=p>)</span><span class=o>.</span><span class=n>strip</span><span class=p>()</span><span class=o>.</span><span class=n>lower</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>                    <span class=k>if</span> <span class=n>user_input</span> <span class=ow>in</span> <span class=p>[</span><span class=s2>&#34;quit&#34;</span><span class=p>,</span> <span class=s2>&#34;exit&#34;</span><span class=p>]:</span>
+</span></span><span class=line><span class=cl>                        <span class=n>logging</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s2>&#34;</span><span class=se>\n</span><span class=s2>Exiting...&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                        <span class=k>break</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                    <span class=n>messages</span><span class=o>.</span><span class=n>append</span><span class=p>({</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;user&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>user_input</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                    <span class=n>llm_response</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>llm_client</span><span class=o>.</span><span class=n>get_response</span><span class=p>(</span><span class=n>messages</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=n>logging</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s2>&#34;</span><span class=se>\n</span><span class=s2>Assistant: </span><span class=si>%s</span><span class=s2>&#34;</span><span class=p>,</span> <span class=n>llm_response</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                    <span class=n>result</span> <span class=o>=</span> <span class=k>await</span> <span class=bp>self</span><span class=o>.</span><span class=n>process_llm_response</span><span class=p>(</span><span class=n>llm_response</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                    <span class=k>if</span> <span class=n>result</span> <span class=o>!=</span> <span class=n>llm_response</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                        <span class=n>messages</span><span class=o>.</span><span class=n>append</span><span class=p>({</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;assistant&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>llm_response</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>                        <span class=n>messages</span><span class=o>.</span><span class=n>append</span><span class=p>({</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;system&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>result</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                        <span class=n>final_response</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>llm_client</span><span class=o>.</span><span class=n>get_response</span><span class=p>(</span><span class=n>messages</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                        <span class=n>logging</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s2>&#34;</span><span class=se>\n</span><span class=s2>Final response: </span><span class=si>%s</span><span class=s2>&#34;</span><span class=p>,</span> <span class=n>final_response</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                        <span class=n>messages</span><span class=o>.</span><span class=n>append</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                            <span class=p>{</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;assistant&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>final_response</span><span class=p>}</span>
+</span></span><span class=line><span class=cl>                        <span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=k>else</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                        <span class=n>messages</span><span class=o>.</span><span class=n>append</span><span class=p>({</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;assistant&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>llm_response</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                <span class=k>except</span> <span class=ne>KeyboardInterrupt</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=n>logging</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s2>&#34;</span><span class=se>\n</span><span class=s2>Exiting...&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=k>break</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>finally</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=k>await</span> <span class=bp>self</span><span class=o>.</span><span class=n>cleanup_servers</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=o>...</span> <span class=c1># 省略其他代码</span></span></span></code></pre></td></tr></table></div></div><p>从代码可以看出，在和大模型进行交互前，将所有工具的结构化描述放到<code>tools_description</code>中，再添加到<code>system_message</code>中，然后把<code>system_message</code>和用户消息一起发送给模型。当模型分析用户请求后，它会决定是否需要调用工具：</p><ul><li>无需工具时：模型直接生成自然语言回复。</li><li>需要工具时：模型输出结构化 JSON 格式的工具调用请求。</li></ul><p>当回复中包含结构化 JSON 格式的工具调用请求，则客户端会根据这个 json 代码调用对应的工具。以上两点可以在<code>get_response</code>、<code>process_llm_response</code>中看到实现，代码逻辑非常简单：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span><span class=lnt>76
+</span><span class=lnt>77
+</span><span class=lnt>78
+</span><span class=lnt>79
+</span><span class=lnt>80
+</span><span class=lnt>81
+</span><span class=lnt>82
+</span><span class=lnt>83
+</span><span class=lnt>84
+</span><span class=lnt>85
+</span><span class=lnt>86
+</span><span class=lnt>87
+</span><span class=lnt>88
+</span><span class=lnt>89
+</span><span class=lnt>90
+</span><span class=lnt>91
+</span><span class=lnt>92
+</span><span class=lnt>93
+</span><span class=lnt>94
+</span><span class=lnt>95
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl>    <span class=k>def</span> <span class=nf>get_response</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>messages</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=nb>dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>str</span><span class=p>]])</span> <span class=o>-&gt;</span> <span class=nb>str</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=s2>&#34;&#34;&#34;Get a response from the LLM.
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>        Args:
+</span></span></span><span class=line><span class=cl><span class=s2>            messages: A list of message dictionaries.
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>        Returns:
+</span></span></span><span class=line><span class=cl><span class=s2>            The LLM&#39;s response as a string.
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>        Raises:
+</span></span></span><span class=line><span class=cl><span class=s2>            httpx.RequestError: If the request to the LLM fails.
+</span></span></span><span class=line><span class=cl><span class=s2>        &#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=n>url</span> <span class=o>=</span> <span class=s2>&#34;https://api.groq.com/openai/v1/chat/completions&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=n>headers</span> <span class=o>=</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;Content-Type&#34;</span><span class=p>:</span> <span class=s2>&#34;application/json&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;Authorization&#34;</span><span class=p>:</span> <span class=sa>f</span><span class=s2>&#34;Bearer </span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>api_key</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=n>payload</span> <span class=o>=</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;messages&#34;</span><span class=p>:</span> <span class=n>messages</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;model&#34;</span><span class=p>:</span> <span class=s2>&#34;llama-3.2-90b-vision-preview&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;temperature&#34;</span><span class=p>:</span> <span class=mf>0.7</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;max_tokens&#34;</span><span class=p>:</span> <span class=mi>4096</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;top_p&#34;</span><span class=p>:</span> <span class=mi>1</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;stream&#34;</span><span class=p>:</span> <span class=kc>False</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;stop&#34;</span><span class=p>:</span> <span class=kc>None</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=k>with</span> <span class=n>httpx</span><span class=o>.</span><span class=n>Client</span><span class=p>()</span> <span class=k>as</span> <span class=n>client</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=n>response</span> <span class=o>=</span> <span class=n>client</span><span class=o>.</span><span class=n>post</span><span class=p>(</span><span class=n>url</span><span class=p>,</span> <span class=n>headers</span><span class=o>=</span><span class=n>headers</span><span class=p>,</span> <span class=n>json</span><span class=o>=</span><span class=n>payload</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=n>response</span><span class=o>.</span><span class=n>raise_for_status</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>                <span class=n>data</span> <span class=o>=</span> <span class=n>response</span><span class=o>.</span><span class=n>json</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>                <span class=k>return</span> <span class=n>data</span><span class=p>[</span><span class=s2>&#34;choices&#34;</span><span class=p>][</span><span class=mi>0</span><span class=p>][</span><span class=s2>&#34;message&#34;</span><span class=p>][</span><span class=s2>&#34;content&#34;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>except</span> <span class=n>httpx</span><span class=o>.</span><span class=n>RequestError</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=n>error_message</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>&#34;Error getting LLM response: </span><span class=si>{</span><span class=nb>str</span><span class=p>(</span><span class=n>e</span><span class=p>)</span><span class=si>}</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>            <span class=n>logging</span><span class=o>.</span><span class=n>error</span><span class=p>(</span><span class=n>error_message</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>e</span><span class=p>,</span> <span class=n>httpx</span><span class=o>.</span><span class=n>HTTPStatusError</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>                <span class=n>status_code</span> <span class=o>=</span> <span class=n>e</span><span class=o>.</span><span class=n>response</span><span class=o>.</span><span class=n>status_code</span>
+</span></span><span class=line><span class=cl>                <span class=n>logging</span><span class=o>.</span><span class=n>error</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;Status code: </span><span class=si>{</span><span class=n>status_code</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=n>logging</span><span class=o>.</span><span class=n>error</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;Response details: </span><span class=si>{</span><span class=n>e</span><span class=o>.</span><span class=n>response</span><span class=o>.</span><span class=n>text</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=k>return</span> <span class=p>(</span>
+</span></span><span class=line><span class=cl>                <span class=sa>f</span><span class=s2>&#34;I encountered an error: </span><span class=si>{</span><span class=n>error_message</span><span class=si>}</span><span class=s2>. &#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;Please try again or rephrase your request.&#34;</span>
+</span></span><span class=line><span class=cl>            <span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1># 省略部分代码...</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>async</span> <span class=k>def</span> <span class=nf>process_llm_response</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>llm_response</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>str</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=s2>&#34;&#34;&#34;Process the LLM response and execute tools if needed.
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>        Args:
+</span></span></span><span class=line><span class=cl><span class=s2>            llm_response: The response from the LLM.
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>        Returns:
+</span></span></span><span class=line><span class=cl><span class=s2>            The result of tool execution or the original response.
+</span></span></span><span class=line><span class=cl><span class=s2>        &#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=kn>import</span> <span class=nn>json</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=n>tool_call</span> <span class=o>=</span> <span class=n>json</span><span class=o>.</span><span class=n>loads</span><span class=p>(</span><span class=n>llm_response</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=s2>&#34;tool&#34;</span> <span class=ow>in</span> <span class=n>tool_call</span> <span class=ow>and</span> <span class=s2>&#34;arguments&#34;</span> <span class=ow>in</span> <span class=n>tool_call</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=n>logging</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;Executing tool: </span><span class=si>{</span><span class=n>tool_call</span><span class=p>[</span><span class=s1>&#39;tool&#39;</span><span class=p>]</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=n>logging</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;With arguments: </span><span class=si>{</span><span class=n>tool_call</span><span class=p>[</span><span class=s1>&#39;arguments&#39;</span><span class=p>]</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                <span class=k>for</span> <span class=n>server</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>servers</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=n>tools</span> <span class=o>=</span> <span class=k>await</span> <span class=n>server</span><span class=o>.</span><span class=n>list_tools</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>                    <span class=k>if</span> <span class=nb>any</span><span class=p>(</span><span class=n>tool</span><span class=o>.</span><span class=n>name</span> <span class=o>==</span> <span class=n>tool_call</span><span class=p>[</span><span class=s2>&#34;tool&#34;</span><span class=p>]</span> <span class=k>for</span> <span class=n>tool</span> <span class=ow>in</span> <span class=n>tools</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>                        <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                            <span class=n>result</span> <span class=o>=</span> <span class=k>await</span> <span class=n>server</span><span class=o>.</span><span class=n>execute_tool</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                                <span class=n>tool_call</span><span class=p>[</span><span class=s2>&#34;tool&#34;</span><span class=p>],</span> <span class=n>tool_call</span><span class=p>[</span><span class=s2>&#34;arguments&#34;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>                            <span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                            <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>result</span><span class=p>,</span> <span class=nb>dict</span><span class=p>)</span> <span class=ow>and</span> <span class=s2>&#34;progress&#34;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                                <span class=n>progress</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=s2>&#34;progress&#34;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>                                <span class=n>total</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=s2>&#34;total&#34;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>                                <span class=n>percentage</span> <span class=o>=</span> <span class=p>(</span><span class=n>progress</span> <span class=o>/</span> <span class=n>total</span><span class=p>)</span> <span class=o>*</span> <span class=mi>100</span>
+</span></span><span class=line><span class=cl>                                <span class=n>logging</span><span class=o>.</span><span class=n>info</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                                    <span class=sa>f</span><span class=s2>&#34;Progress: </span><span class=si>{</span><span class=n>progress</span><span class=si>}</span><span class=s2>/</span><span class=si>{</span><span class=n>total</span><span class=si>}</span><span class=s2> &#34;</span>
+</span></span><span class=line><span class=cl>                                    <span class=sa>f</span><span class=s2>&#34;(</span><span class=si>{</span><span class=n>percentage</span><span class=si>:</span><span class=s2>.1f</span><span class=si>}</span><span class=s2>%)&#34;</span>
+</span></span><span class=line><span class=cl>                                <span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                            <span class=k>return</span> <span class=sa>f</span><span class=s2>&#34;Tool execution result: </span><span class=si>{</span><span class=n>result</span><span class=si>}</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                        <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                            <span class=n>error_msg</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>&#34;Error executing tool: </span><span class=si>{</span><span class=nb>str</span><span class=p>(</span><span class=n>e</span><span class=p>)</span><span class=si>}</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>                            <span class=n>logging</span><span class=o>.</span><span class=n>error</span><span class=p>(</span><span class=n>error_msg</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                            <span class=k>return</span> <span class=n>error_msg</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                <span class=k>return</span> <span class=sa>f</span><span class=s2>&#34;No server found with tool: </span><span class=si>{</span><span class=n>tool_call</span><span class=p>[</span><span class=s1>&#39;tool&#39;</span><span class=p>]</span><span class=si>}</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span> <span class=n>llm_response</span>
+</span></span><span class=line><span class=cl>        <span class=k>except</span> <span class=n>json</span><span class=o>.</span><span class=n>JSONDecodeError</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span> <span class=n>llm_response</span></span></span></code></pre></td></tr></table></div></div><p>至此，MCP服务和LLM之间的调用过程已经很明朗了：<figure><img src=https://images.benelin.site/posts/mcp-process.jpg width=800 height=800></figure></p><p>依据以上实现原理可以总结：</p><ul><li><strong>MCP 的出现是 prompt engineering 发展的产物。模型是通过 prompt engineering，即提供所有工具的结构化描述来确定该使用哪些工具的。</strong></li><li><strong>MCP 工具文档至关重要，模型通过工具描述文本来理解和选择工具，因此精心编写工具的名称、docstring 和参数说明至关重要。</strong></li><li><strong>由于 MCP 的选择是基于 prompt 的，所以任何模型其实都适配 MCP。</strong></li></ul><p><strong>参考资料</strong></p><ol><li><a href=https://github.com/modelcontextprotocol/python-sdk/blob/main/examples/clients/simple-chatbot/mcp_simple_chatbot/main.py target=_blank rel="external nofollow noopener noreferrer">modelcontextprotocol/python-sdk</a></li><li><a href=https://mp.weixin.qq.com/s/6j3q4LAOvCgUo54xE_Y5Vg target=_blank rel="external nofollow noopener noreferrer">如何用go搭建MCP服务</a></li></ol></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span title="更新于 2025-04-18 13:27:28">更新于 2025-04-18&nbsp;</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 X" data-sharer=twitter data-url=https://beneliu.github.io/posts/ai/f6ee174/ data-title=MCP和LLM的调用细节 data-hashtags=MCP,AI><i class="fa-brands fa-x-twitter fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 Facebook" data-sharer=facebook data-url=https://beneliu.github.io/posts/ai/f6ee174/ data-hashtag=MCP><i class="fa-brands fa-facebook-square fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://beneliu.github.io/posts/ai/f6ee174/ data-title=MCP和LLM的调用细节><i class="fa-brands fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fa-solid fa-tags fa-fw me-1" aria-hidden=true></i><a href=/tags/mcp/ class=post-tag title="标签 - MCP">MCP</a><a href=/tags/ai/ class=post-tag title="标签 - AI">AI</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/posts/ai/130309a/ class=post-nav-item rel=prev title=MCP架构和协议解析><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i>MCP架构和协议解析</a></div></div><div class=post-reward><div class=comment>Buy me a coffee</div><input type=checkbox class=reward-input name=reward id=fi-reward hidden>
+<label class=reward-button for=fi-reward><i class="fa-solid fa-qrcode fa-fw" aria-hidden=true></i>赞赏</label><div class=reward-ways data-mode=static><div><img src=/images/alipay.jpg alt="beneliu 支付宝"><span>支付宝</span></div><div><img src=/images/wechatpay.jpg alt="beneliu 微信"><span>微信</span></div></div></div><div id=comments><div id=giscus class=comment><script src=https://giscus.app/client.js data-repo=beneliu/beneliu.github.io data-repo-id=R_kgDOOQGXgQ data-category=Announcements data-category-id=DIC_kwDOOQGXgc4CovKm data-mapping=pathname data-strict=0 data-theme=preferred_color_scheme data-reactions-enabled=1 data-emit-metadata=0 data-input-position=top data-lang=zh-CN data-loading=lazy crossorigin=anonymous async defer></script></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://giscus.app/ rel="external nofollow noopener noreferrer">giscus</a>.</noscript></div></article><aside class=toc id=toc-auto aria-label=目录></aside></main><footer class=footer><div class=footer-container><div class="footer-line powered order-last">由 <a href=https://gohugo.io/ target=_blank rel="external nofollow noopener noreferrer" title="Hugo 0.145.0"><img class=hugo-icon src=/images/hugo.min.svg alt="Hugo logo"> Hugo</a> 强力驱动 | 主题 - <a href=https://github.com/hugo-fixit/FixIt target=_blank rel=external title="FixIt v0.3.17-8212d6fd"><img class=fixit-icon src=/images/fixit.min.svg alt="FixIt logo"> FixIt</a></div><div class="footer-line copyright order-first" itemscope itemtype=http://schema.org/CreativeWork><i class="fa-regular fa-copyright fa-fw" aria-hidden=true></i>
+<span itemprop=copyrightYear>2025</span><span class=author itemprop=copyrightHolder>
+<a href=https://github.com/beneliu target=_blank rel="external nofollow noopener noreferrer">beneliu</a></span></div><div class="footer-line statistics"><span class=site-time title=网站运行中……><i class="fa-solid fa-heartbeat fa-fw animate-icon fa-fw animate-icon" aria-hidden=true></i><span class="ms-1 d-none">Runing</span><span class="run-times ms-1">网站运行中……</span></span></div><div class="footer-line visitor"><span id=busuanzi_container_site_uv title=总访客数><i class="fa-regular fa-user fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_site_uv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span><span id=busuanzi_container_site_pv class=footer-divider title=总访问量><i class="fa-regular fa-eye fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_site_pv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span></div></div></footer></div><div class=widgets><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role=button aria-label=回到顶部><i class="fa-solid fa-arrow-up fa-fw" aria-hidden=true></i><span class=variant-numeric>0%</span></div><div class="fixed-button view-comments d-none" role=button aria-label=查看评论><i class="fa-solid fa-comment fa-fw" aria-hidden=true></i></div></div><a href=https://github.com/beneliu title="Visit Me on GitHub" target=_blank rel="external nofollow" class="github-corner left d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0 0 115 115h15l12 27L250 250V0z"/><path d="M128.3 109C113.8 99.7 119 89.6 119 89.6 122 82.7 120.5 78.6 120.5 78.6 119.2 72 123.4 76.3 123.4 76.3 127.3 80.9 125.5 87.3 125.5 87.3 122.9 97.6 130.6 101.9 134.4 103.2" fill="currentcolor" style="transform-origin:130px 106px" class="octo-arm"/><path d="M115 115C114.9 115.1 118.7 116.5 119.8 115.4l13.9-13.8C136.9 99.2 139.9 98.4 142.2 98.6 133.8 88 127.5 74.4 143.8 58 148.5 53.4 154 51.2 159.7 51 160.3 49.4 163.2 43.6 171.4 40.1 171.4 40.1 176.1 42.5 178.8 56.2 183.1 58.6 187.2 61.8 190.9 65.4 194.5 69 197.7 73.2 200.1 77.6 213.8 80.2 216.3 84.9 216.3 84.9 212.7 93.1 206.9 96 205.4 96.6 205.1 102.4 203 107.8 198.3 112.5 181.9 128.9 168.3 122.5 157.7 114.1 157.9 116.9 156.7 120.9 152.7 124.9L141 136.5C139.8 137.7 141.6 141.9 141.8 141.8z" fill="currentcolor" class="octo-body"/></svg></a><div id=mask></div><div class=reading-progress-bar style=left:0;top:0></div><noscript><div class=noscript-warning>该网站在启用 JavaScript 的情况下效果最佳。</div></noscript></div><link rel=stylesheet href=/lib/lightgallery/css/lightgallery-bundle.min.css><link rel=stylesheet href=/lib/cookieconsent/cookieconsent.min.css><script src=/lib/autocomplete/autocomplete.min.js defer></script><script src=/lib/fuse/fuse.min.js defer></script><script src=/lib/lightgallery/lightgallery.min.js defer></script><script src=/lib/lightgallery/plugins/thumbnail/lg-thumbnail.min.js defer></script><script src=/lib/lightgallery/plugins/zoom/lg-zoom.min.js defer></script><script src=/lib/sharer/sharer.min.js async defer></script><script src=/lib/cookieconsent/cookieconsent.min.js defer></script><script src=https://vercount.one/js async defer></script><script>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:10},comment:{enable:!0,expired:!1,giscus:{darkTheme:"dark",lightTheme:"light",origin:"https://giscus.app"}},cookieconsent:{content:{dismiss:"同意",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验。"},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,search:{distance:100,findAllMatches:!1,fuseIndexURL:"/search.json",highlightTag:"em",ignoreFieldNorm:!1,ignoreLocation:!1,isCaseSensitive:!1,location:0,maxResultLength:10,minMatchCharLength:2,noResultsFound:"没有找到结果",snippetLength:30,threshold:.3,type:"fuse",useExtendedSearch:!1},siteTime:"2025-04-02T15:30:00+08:00",version:"v0.3.17-8212d6fd"}</script><script src=/js/theme.min.js defer></script><script src=/js/custom.min.js defer></script></body></html>
